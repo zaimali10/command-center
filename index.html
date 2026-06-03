@@ -340,16 +340,22 @@
     'use strict';
 
     const API = {
-      baseUrl: 'http://192.168.1.30:9119',
-      token: null,
+      baseUrl: '',
       live: false,
       cache: {},
       async init() {
         try {
-          const r = await fetch(this.baseUrl + '/');
-          const html = await r.text();
-          const m = html.match(/__HERMES_SESSION_TOKEN__="([^"]+)"/);
-          this.token = m ? m[1] : null;
+          // When running locally through the proxy server (serve.py),
+          // API calls are relative paths (/api/status).
+          // On GitHub Pages, baseUrl should be set to the laptop LAN IP.
+          const isLocal = document.location.hostname === 'localhost' ||
+                          document.location.hostname === '127.0.0.1' ||
+                          document.location.hostname === '192.168.1.30' ||
+                          document.location.hostname === '192.168.';
+          if (!isLocal) {
+            // On GitHub Pages — try the LAN IP for live data
+            this.baseUrl = 'http://192.168.1.30:9119';
+          }
           const status = await this.get('/api/status');
           this.live = !!status;
         } catch { this.live = false; }
@@ -358,7 +364,6 @@
       async get(path) {
         try {
           const h = {'Accept': 'application/json'};
-          if (this.token) h['X-Hermes-Session-Token'] = this.token;
           const r = await fetch(this.baseUrl + path, {headers: h});
           if (!r.ok) return null;
           return await r.json();
