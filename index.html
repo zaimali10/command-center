@@ -233,6 +233,21 @@
       header { flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px; }
       #clock { font-size: 44px; }
     }
+
+    /* iPad landscape and portrait fine-tuning */
+    @media (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
+      body { font-size: 16px; }
+      .card { min-height: 200px; padding: 22px; }
+      .todo-input, .todo-add, .todo-del, .todo-check, .discord-btn, .proj { font-size: 16px; }
+      /* Prevent rubber-band overscroll bleed */
+      html, body { overscroll-behavior: none; }
+    }
+
+    /* Hide scrollbars in webkit while keeping scroll */
+    .gh-events::-webkit-scrollbar, .todo-list::-webkit-scrollbar { width: 6px; }
+    .gh-events::-webkit-scrollbar-thumb, .todo-list::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1); border-radius: 3px;
+    }
   </style>
 </head>
 <body>
