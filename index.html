@@ -150,6 +150,58 @@
     .discord-btn:active { transform: scale(0.97); background: rgba(0,255,208,0.22); }
     .discord-sub { color: var(--fg-dim); font-size: 13px; }
 
+    .todo-input-row { display: flex; gap: 8px; }
+    .todo-input {
+      flex: 1;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-br);
+      background: rgba(255,255,255,0.03);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      font-size: 16px;     /* 16px+ prevents iOS Safari zoom-on-focus */
+      outline: none;
+    }
+    .todo-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,255,208,0.2); }
+    .todo-add {
+      min-width: 56px; min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid var(--accent);
+      background: rgba(0,255,208,0.12);
+      color: var(--accent);
+      border-radius: 12px;
+      font-size: 20px; font-weight: 700;
+      cursor: pointer;
+    }
+    .todo-add:active { background: rgba(0,255,208,0.22); }
+
+    .todo-list { list-style: none; display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+    .todo-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      min-height: 44px;
+    }
+    .todo-item.done .todo-text { text-decoration: line-through; color: var(--fg-dim); }
+    .todo-check {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 1.5px solid var(--accent);
+      background: transparent;
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .todo-check.checked { background: var(--accent); }
+    .todo-check.checked::after { content: '✓'; color: var(--bg); font-weight: 900; font-size: 14px; }
+    .todo-text { flex: 1; font-size: 15px; color: var(--fg); word-break: break-word; }
+    .todo-del {
+      background: none; border: none; color: var(--fg-dim);
+      font-size: 20px; cursor: pointer; padding: 4px 8px; min-width: 32px; min-height: 32px;
+    }
+    .todo-del:active { color: var(--danger); }
+
     /* responsive */
     @media (max-width: 1000px) {
       main#grid { grid-template-columns: repeat(2, 1fr); }
@@ -310,6 +362,78 @@
           Open #jarvis →
         </a>
       `;
+    })();
+
+    (function todo() {
+      const STORAGE_KEY = 'cc.todos.v1';
+      const el = document.getElementById('widget-todo');
+
+      function load() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+        catch { return []; }
+      }
+      function save(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+
+      let items = load();
+
+      function render() {
+        el.innerHTML = `
+          <h2>To-Do</h2>
+          <div class="todo-input-row">
+            <input class="todo-input" type="text" placeholder="add a task…" maxlength="140" />
+            <button class="todo-add" aria-label="add task">+</button>
+          </div>
+          <ul class="todo-list"></ul>
+        `;
+        const input = el.querySelector('.todo-input');
+        const addBtn = el.querySelector('.todo-add');
+        const list   = el.querySelector('.todo-list');
+
+        function add() {
+          const text = input.value.trim();
+          if (!text) return;
+          items.push({ id: Date.now() + Math.random(), text, done: false });
+          input.value = '';
+          save(items);
+          renderList();
+        }
+        addBtn.addEventListener('click', add);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+
+        function renderList() {
+          list.innerHTML = items.map(it => `
+            <li class="todo-item ${it.done ? 'done' : ''}" data-id="${it.id}">
+              <button class="todo-check ${it.done ? 'checked' : ''}" aria-label="toggle"></button>
+              <span class="todo-text">${escapeHtml(it.text)}</span>
+              <button class="todo-del" aria-label="delete">×</button>
+            </li>
+          `).join('') || '<li style="color:var(--fg-dim);font-size:14px;padding:8px 4px;">no tasks yet</li>';
+
+          list.querySelectorAll('.todo-item').forEach(li => {
+            const id = Number(li.dataset.id);
+            li.querySelector('.todo-check').addEventListener('click', () => toggle(id));
+            li.querySelector('.todo-del').addEventListener('click', () => remove(id));
+          });
+        }
+
+        function toggle(id) {
+          const it = items.find(x => x.id === id);
+          if (!it) return;
+          it.done = !it.done;
+          save(items); renderList();
+        }
+        function remove(id) {
+          items = items.filter(x => x.id !== id);
+          save(items); renderList();
+        }
+        function escapeHtml(s) {
+          return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        renderList();
+      }
+
+      render();
     })();
   </script>
 </body>
