@@ -410,495 +410,6 @@
       ],
     };
 
-    (function clock() {
-      const elTime = document.getElementById('clock');
-      const elDate = document.getElementById('date');
-      const pad = n => String(n).padStart(2, '0');
-      const DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-      const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-      function tick() {
-        const d = new Date();
-        elTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-        elDate.textContent = `${DAY[d.getDay()]} ${pad(d.getDate())} ${MON[d.getMonth()]} ${d.getFullYear()}`;
-      }
-      tick();
-      setInterval(tick, CONFIG.clockTickMs);
-    })();
-
-    (function quote() {
-      const el = document.getElementById('widget-quote');
-      let i = Math.floor(Math.random() * CONFIG.quotes.length);
-
-      function render() {
-        const q = CONFIG.quotes[i];
-        el.innerHTML = `"${q.text}" — <span style="color:var(--accent-2)">${q.author}</span>`;
-      }
-      render();
-      setInterval(() => {
-        i = (i + 1) % CONFIG.quotes.length;
-        render();
-      }, CONFIG.quoteRotateMs);
-    })();
-
-    (function system() {
-      const el = document.getElementById('widget-system');
-
-      async function render() {
-        const data = await API.get('/api/status');
-        if (!data || !API.live) {
-          const h = CONFIG.hermes;
-          const dotClass = h.status === 'online' ? '' : 'offline';
-          el.innerHTML = `
-            <h2>System</h2>
-            <div class="stat-row">
-              <span class="label">gateway</span>
-              <span class="badge">
-                <span class="badge-dot ${dotClass ? 'red' : 'green'}"></span>
-                <span>${h.status}</span>
-              </span>
-            </div>
-            <div class="stat-row">
-              <span class="label">discord</span>
-              <span class="badge"><span class="badge-dot gray"></span><span>offline</span></span>
-            </div>
-            <div class="stat-row">
-              <span class="label">sessions</span>
-              <span class="value">0</span>
-            </div>
-            <div class="stat-row">
-              <span class="label">version</span>
-              <span class="value">v1.0.0</span>
-            </div>
-          `;
-          return;
-        }
-        const gatewayDot = data.gateway ? 'green' : 'red';
-        const discordDot = data.discord ? 'green' : 'red';
-        el.innerHTML = `
-          <h2>System</h2>
-          <div class="stat-row">
-            <span class="label">gateway</span>
-            <span class="badge">
-              <span class="badge-dot ${gatewayDot}"></span>
-              <span>${data.gateway ? 'online' : 'offline'}</span>
-            </span>
-          </div>
-          <div class="stat-row">
-            <span class="label">discord</span>
-            <span class="badge">
-              <span class="badge-dot ${discordDot}"></span>
-              <span>${data.discord ? 'online' : 'offline'}</span>
-            </span>
-          </div>
-          <div class="stat-row">
-            <span class="label">sessions</span>
-            <span class="value">${data.sessions || 0}</span>
-          </div>
-          <div class="stat-row">
-            <span class="label">version</span>
-            <span class="value">${data.version || 'v1.0.0'}</span>
-          </div>
-        `;
-      }
-
-      render();
-    })();
-
-    (function projects() {
-      const el = document.getElementById('widget-projects');
-      const cards = CONFIG.projects.map(p => `
-        <a class="proj" href="https://github.com/${p.repo}" target="_blank" rel="noopener">
-          <div class="proj-label">${p.label}</div>
-          <div class="proj-desc">${p.desc}</div>
-          <div class="proj-cta">open ↗</div>
-        </a>
-      `).join('');
-      el.innerHTML = `<h2>Projects</h2><div class="proj-row">${cards}</div>`;
-    })();
-
-    (function discord() {
-      const el = document.getElementById('widget-discord');
-      el.innerHTML = `
-        <h2>Quick Chat</h2>
-        <div class="discord-sub">Send a message to your agents in #jarvis</div>
-        <a class="discord-btn" href="${CONFIG.discordChannelUrl}" target="_blank" rel="noopener">
-          Open #jarvis →
-        </a>
-      `;
-    })();
-
-    (function todo() {
-      const STORAGE_KEY = 'cc.todos.v1';
-      const el = document.getElementById('widget-todo');
-
-      function load() {
-        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-        catch { return []; }
-      }
-      function save(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
-
-      let items = load();
-
-      function render() {
-        el.innerHTML = `
-          <h2>To-Do</h2>
-          <div class="todo-input-row">
-            <input class="todo-input" type="text" placeholder="add a task…" maxlength="140" />
-            <button class="todo-add" aria-label="add task">+</button>
-          </div>
-          <ul class="todo-list"></ul>
-        `;
-        const input = el.querySelector('.todo-input');
-        const addBtn = el.querySelector('.todo-add');
-        const list   = el.querySelector('.todo-list');
-
-        function add() {
-          const text = input.value.trim();
-          if (!text) return;
-          items.push({ id: Date.now() + Math.random(), text, done: false });
-          input.value = '';
-          save(items);
-          renderList();
-        }
-        addBtn.addEventListener('click', add);
-        input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
-
-        function renderList() {
-          list.innerHTML = items.map(it => `
-            <li class="todo-item ${it.done ? 'done' : ''}" data-id="${it.id}">
-              <button class="todo-check ${it.done ? 'checked' : ''}" aria-label="toggle"></button>
-              <span class="todo-text">${escapeHtml(it.text)}</span>
-              <button class="todo-del" aria-label="delete">×</button>
-            </li>
-          `).join('') || '<li style="color:var(--fg-dim);font-size:14px;padding:8px 4px;">no tasks yet</li>';
-
-          list.querySelectorAll('.todo-item').forEach(li => {
-            const id = Number(li.dataset.id);
-            li.querySelector('.todo-check').addEventListener('click', () => toggle(id));
-            li.querySelector('.todo-del').addEventListener('click', () => remove(id));
-          });
-        }
-
-        function toggle(id) {
-          const it = items.find(x => x.id === id);
-          if (!it) return;
-          it.done = !it.done;
-          save(items); renderList();
-        }
-        function remove(id) {
-          items = items.filter(x => x.id !== id);
-          save(items); renderList();
-        }
-        function escapeHtml(s) {
-          return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-        }
-
-        renderList();
-      }
-
-      render();
-    })();
-
-    (function weather() {
-      const el = document.getElementById('widget-weather');
-
-      // wttr weatherCode → glyph
-      const ICON = (code) => {
-        const c = Number(code);
-        if (c === 113) return '☀';                              // clear/sunny
-        if ([116].includes(c)) return '⛅';                      // partly cloudy
-        if ([119, 122].includes(c)) return '☁';                 // cloudy / overcast
-        if ([143, 248, 260].includes(c)) return '🌫';           // fog/mist
-        if ([176, 263, 266, 281, 284, 293, 296, 299, 302, 305, 308, 311, 314, 317, 350, 353, 356, 359, 386, 389].includes(c)) return '🌧';
-        if ([200].includes(c)) return '⛈';                      // thunder
-        if ([179, 182, 185, 227, 230, 320, 323, 326, 329, 332, 335, 338, 368, 371, 374, 377, 392, 395].includes(c)) return '❄';
-        return '🌡';
-      };
-
-      function render(state) {
-        if (state.error) {
-          el.innerHTML = `<h2>Weather · Dallas</h2><div class="wx-err">weather unavailable</div>`;
-          return;
-        }
-        const d = state.data;
-        el.innerHTML = `
-          <h2>Weather · ${d.area}</h2>
-          <div class="wx-main">
-            <div class="wx-icon">${ICON(d.code)}</div>
-            <div>
-              <div class="wx-temp">${d.tempF}°F</div>
-              <div class="wx-desc">${d.desc}</div>
-            </div>
-          </div>
-          <div class="wx-grid">
-            <div class="k">feels</div><div class="v">${d.feelsF}°F</div>
-            <div class="k">wind</div> <div class="v">${d.windMph} mph ${d.windDir}</div>
-            <div class="k">humidity</div><div class="v">${d.humidity}%</div>
-          </div>
-        `;
-      }
-
-      async function fetchWeather() {
-        try {
-          const res = await fetch(`https://wttr.in/${encodeURIComponent(CONFIG.weatherLocation)}?format=j1`);
-          if (!res.ok) throw new Error('http ' + res.status);
-          const j = await res.json();
-          const cc = j.current_condition[0];
-          const area = (j.nearest_area && j.nearest_area[0] && j.nearest_area[0].areaName[0].value) || CONFIG.weatherLocation;
-          render({ data: {
-            area,
-            tempF:    cc.temp_F,
-            feelsF:   cc.FeelsLikeF,
-            desc:     cc.weatherDesc[0].value,
-            windMph:  cc.windspeedMiles,
-            windDir:  cc.winddir16Point,
-            humidity: cc.humidity,
-            code:     cc.weatherCode,
-          }});
-        } catch (e) {
-          console.warn('[weather]', e);
-          render({ error: true });
-        }
-      }
-
-      render({ data: { area: CONFIG.weatherLocation, tempF: '--', feelsF: '--', desc: 'loading…', windMph: '--', windDir: '--', humidity: '--', code: 0 }});
-      fetchWeather();
-      setInterval(fetchWeather, CONFIG.weatherRefreshMs);
-    })();
-
-    (function github() {
-      const el = document.getElementById('widget-github');
-
-      const VERB = {
-        PushEvent:        'push',
-        PullRequestEvent: 'PR',
-        IssuesEvent:      'issue',
-        CreateEvent:      'create',
-        DeleteEvent:      'delete',
-        WatchEvent:       'star',
-        ForkEvent:        'fork',
-        ReleaseEvent:     'release',
-        CommitCommentEvent: 'comment',
-        IssueCommentEvent:  'comment',
-      };
-
-      function relTime(iso) {
-        const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-        if (s < 60)      return `${s}s ago`;
-        if (s < 3600)    return `${Math.floor(s/60)}m ago`;
-        if (s < 86400)   return `${Math.floor(s/3600)}h ago`;
-        return `${Math.floor(s/86400)}d ago`;
-      }
-
-      function shortRepo(full) {
-        const i = full.indexOf('/');
-        return i >= 0 ? full.slice(i+1) : full;
-      }
-
-      function buildSpark(events) {
-        // count events per day for last 14 days (oldest → newest)
-        const days = 14;
-        const buckets = new Array(days).fill(0);
-        const today = new Date(); today.setHours(0,0,0,0);
-        for (const ev of events) {
-          const d = new Date(ev.created_at); d.setHours(0,0,0,0);
-          const idx = days - 1 - Math.floor((today - d) / 86400000);
-          if (idx >= 0 && idx < days) buckets[idx]++;
-        }
-        return buckets.map(n => {
-          if (n === 0) return `<span class="lo">▯</span>`;
-          if (n < 3)   return `<span class="mid">▮</span>`;
-          return `<span class="hi">▮</span>`;
-        }).join('');
-      }
-
-      function render(state) {
-        if (state.error) {
-          el.innerHTML = `<h2>GitHub Pulse</h2><div class="gh-err">github pulse unavailable</div>`;
-          return;
-        }
-        const evs = state.events;
-        const total = evs.length;
-        const spark = buildSpark(evs);
-        const recent = evs.slice(0, 5).map(ev => `
-          <div class="gh-event">
-            <span class="gh-verb">${VERB[ev.type] || ev.type.replace('Event','').toLowerCase()}</span>
-            <span class="gh-repo">${shortRepo(ev.repo.name)}</span>
-            <span class="gh-when">${relTime(ev.created_at)}</span>
-          </div>
-        `).join('') || '<div style="color:var(--fg-dim)">no recent activity</div>';
-
-        el.innerHTML = `
-          <h2>GitHub Pulse · @${CONFIG.githubUser}</h2>
-          <div><span class="gh-spark">${spark}</span><span class="gh-count">${total} events / 14d</span></div>
-          <div class="gh-events">${recent}</div>
-        `;
-      }
-
-      async function fetchEvents() {
-        try {
-          const res = await fetch(`https://api.github.com/users/${encodeURIComponent(CONFIG.githubUser)}/events/public`, {
-            headers: { 'Accept': 'application/vnd.github+json' },
-          });
-          if (!res.ok) throw new Error('http ' + res.status);
-          const events = await res.json();
-          render({ events });
-        } catch (e) {
-          console.warn('[github]', e);
-          render({ error: true });
-        }
-      }
-
-      el.innerHTML = `<h2>GitHub Pulse · @${CONFIG.githubUser}</h2><div class="empty">loading…</div>`;
-      fetchEvents();
-      setInterval(fetchEvents, CONFIG.githubRefreshMs);
-    })();
-
-    (function cron() {
-      const el = document.getElementById('widget-cron');
-
-      async function render() {
-        const data = await API.get('/api/cron/jobs');
-        if (!data || !API.live) {
-          el.innerHTML = `<h2>Cron Jobs</h2><div class="empty">STATIC</div>`;
-          return;
-        }
-        if (!Array.isArray(data) || data.length === 0) {
-          el.innerHTML = `<h2>Cron Jobs</h2><div class="empty">no scheduled jobs</div>`;
-          return;
-        }
-        const rows = data.map(job => `
-          <tr>
-            <td>${job.name || '—'}</td>
-            <td>${job.state || '—'}</td>
-            <td>${job.schedule || '—'}</td>
-            <td>${job.lastRun || '—'}</td>
-          </tr>
-        `).join('');
-        el.innerHTML = `
-          <h2>Cron Jobs</h2>
-          <table class="widget-table">
-            <tr><td>Job</td><td>State</td><td>Schedule</td><td>Last Run</td></tr>
-            ${rows}
-          </table>
-        `;
-      }
-
-      render();
-    })();
-
-    (function sessions() {
-      const el = document.getElementById('widget-sessions');
-
-      async function render() {
-        const data = await API.get('/api/sessions');
-        if (!data || !API.live) {
-          el.innerHTML = `<h2>Recent Sessions</h2><div class="empty">—</div>`;
-          return;
-        }
-        const list = data.sessions || [];
-        if (list.length === 0) {
-          el.innerHTML = `<h2>Recent Sessions</h2><div class="empty">no sessions</div>`;
-          return;
-        }
-        const recent = list.slice(0, 5).map(s => `
-          <div class="stat-row">
-            <span class="label">${s.model || 'unknown'}</span>
-            <span class="value">${s.messages || 0}m · ${s.timeAgo || '—'}</span>
-          </div>
-        `).join('');
-        el.innerHTML = `<h2>Recent Sessions</h2>${recent}`;
-      }
-
-      render();
-    })();
-
-    (function analytics() {
-      const el = document.getElementById('widget-analytics');
-
-      async function render() {
-        const data = await API.get('/api/analytics/usage?days=7');
-        if (!data || !API.live) {
-          el.innerHTML = `<h2>Usage Analytics</h2><div class="empty">—</div>`;
-          return;
-        }
-        let totalIn = 0, totalOut = 0, totalSessions = 0;
-        if (data.daily && Array.isArray(data.daily)) {
-          for (const day of data.daily) {
-            totalIn += day.inputTokens || 0;
-            totalOut += day.outputTokens || 0;
-          }
-        }
-        totalSessions = data.sessionCount || 0;
-        const formatTokens = n => {
-          if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-          if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-          return String(n);
-        };
-        let spark = '▁▂▃▄▅▆▇█';
-        if (data.daily && Array.isArray(data.daily)) {
-          const max = Math.max(...data.daily.map(d => (d.inputTokens || 0) + (d.outputTokens || 0)));
-          const bars = data.daily.map(d => {
-            const total = (d.inputTokens || 0) + (d.outputTokens || 0);
-            if (max === 0) return 0;
-            return Math.ceil((total / max) * 8);
-          });
-          spark = bars.map(i => '▁▂▃▄▅▆▇█'[Math.min(i, 8)]).join('');
-        }
-        el.innerHTML = `
-          <h2>Usage Analytics · 7 days</h2>
-          <div style="display:flex;gap:20px;align-items:flex-start;">
-            <div>
-              <div class="sparkline">${spark}</div>
-              <div style="font-size:12px;color:var(--fg-dim);margin-top:8px;">
-                ${formatTokens(totalIn)} in / ${formatTokens(totalOut)} out
-              </div>
-            </div>
-            <div style="flex:1;">
-              <div class="stat-row">
-                <span class="label">sessions</span>
-                <span class="value">${totalSessions}</span>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      render();
-    })();
-
-    (function skills() {
-      const el = document.getElementById('widget-skills');
-
-      async function render() {
-        const data = await API.get('/api/skills');
-        if (!data || !API.live) {
-          el.innerHTML = `<h2>Skills</h2><div class="empty">—</div>`;
-          return;
-        }
-        if (!Array.isArray(data) || data.length === 0) {
-          el.innerHTML = `<h2>Skills</h2><div class="empty">no skills</div>`;
-          return;
-        }
-        const enabled = data.filter(s => s.enabled).length;
-        const total = data.length;
-        const names = data.filter(s => s.enabled).slice(0, 5).map(s => s.name).join(', ');
-        el.innerHTML = `
-          <h2>Skills</h2>
-          <div class="stat-row">
-            <span class="label">enabled</span>
-            <span class="value">${enabled} / ${total}</span>
-          </div>
-          <div style="font-size:12px;color:var(--fg-dim);margin-top:8px;word-break:break-word;">
-            ${names || 'none'}
-          </div>
-        `;
-      }
-
-      render();
-    })();
-
     (async function init() {
       await API.init();
       const modeEl = document.getElementById('mode-indicator');
@@ -910,6 +421,495 @@
         modeEl.classList.add('static');
       }
 
+      (function clock() {
+        const elTime = document.getElementById('clock');
+        const elDate = document.getElementById('date');
+        const pad = n => String(n).padStart(2, '0');
+        const DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        function tick() {
+          const d = new Date();
+          elTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+          elDate.textContent = `${DAY[d.getDay()]} ${pad(d.getDate())} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+        }
+        tick();
+        setInterval(tick, CONFIG.clockTickMs);
+      })();
+
+      (function quote() {
+        const el = document.getElementById('widget-quote');
+        let i = Math.floor(Math.random() * CONFIG.quotes.length);
+
+        function render() {
+          const q = CONFIG.quotes[i];
+          el.innerHTML = `"${q.text}" — <span style="color:var(--accent-2)">${q.author}</span>`;
+        }
+        render();
+        setInterval(() => {
+          i = (i + 1) % CONFIG.quotes.length;
+          render();
+        }, CONFIG.quoteRotateMs);
+      })();
+
+      (async function system() {
+        const el = document.getElementById('widget-system');
+
+        async function render() {
+          const data = await API.get('/api/status');
+          if (!data || !API.live) {
+            const h = CONFIG.hermes;
+            const dotClass = h.status === 'online' ? '' : 'offline';
+            el.innerHTML = `
+              <h2>System</h2>
+              <div class="stat-row">
+                <span class="label">gateway</span>
+                <span class="badge">
+                  <span class="badge-dot ${dotClass ? 'red' : 'green'}"></span>
+                  <span>${h.status}</span>
+                </span>
+              </div>
+              <div class="stat-row">
+                <span class="label">discord</span>
+                <span class="badge"><span class="badge-dot gray"></span><span>offline</span></span>
+              </div>
+              <div class="stat-row">
+                <span class="label">sessions</span>
+                <span class="value">0</span>
+              </div>
+              <div class="stat-row">
+                <span class="label">version</span>
+                <span class="value">v1.0.0</span>
+              </div>
+            `;
+            return;
+          }
+          const gatewayDot = data.gateway_state === 'running' ? 'green' : 'red';
+          const discordDot = (data.gateway_platforms?.discord?.state === 'connected') ? 'green' : 'red';
+          el.innerHTML = `
+            <h2>System</h2>
+            <div class="stat-row">
+              <span class="label">gateway</span>
+              <span class="badge">
+                <span class="badge-dot ${gatewayDot}"></span>
+                <span>${data.gateway_state || 'offline'}</span>
+              </span>
+            </div>
+            <div class="stat-row">
+              <span class="label">discord</span>
+              <span class="badge">
+                <span class="badge-dot ${discordDot}"></span>
+                <span>${data.gateway_platforms?.discord?.state || 'offline'}</span>
+              </span>
+            </div>
+            <div class="stat-row">
+              <span class="label">sessions</span>
+              <span class="value">${data.active_sessions || 0}</span>
+            </div>
+            <div class="stat-row">
+              <span class="label">version</span>
+              <span class="value">${data.version || 'v1.0.0'}</span>
+            </div>
+          `;
+        }
+
+        await render();
+      })();
+
+      (function projects() {
+        const el = document.getElementById('widget-projects');
+        const cards = CONFIG.projects.map(p => `
+          <a class="proj" href="https://github.com/${p.repo}" target="_blank" rel="noopener">
+            <div class="proj-label">${p.label}</div>
+            <div class="proj-desc">${p.desc}</div>
+            <div class="proj-cta">open ↗</div>
+          </a>
+        `).join('');
+        el.innerHTML = `<h2>Projects</h2><div class="proj-row">${cards}</div>`;
+      })();
+
+      (function discord() {
+        const el = document.getElementById('widget-discord');
+        el.innerHTML = `
+          <h2>Quick Chat</h2>
+          <div class="discord-sub">Send a message to your agents in #jarvis</div>
+          <a class="discord-btn" href="${CONFIG.discordChannelUrl}" target="_blank" rel="noopener">
+            Open #jarvis →
+          </a>
+        `;
+      })();
+
+      (function todo() {
+        const STORAGE_KEY = 'cc.todos.v1';
+        const el = document.getElementById('widget-todo');
+
+        function load() {
+          try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+          catch { return []; }
+        }
+        function save(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+
+        let items = load();
+
+        function render() {
+          el.innerHTML = `
+            <h2>To-Do</h2>
+            <div class="todo-input-row">
+              <input class="todo-input" type="text" placeholder="add a task…" maxlength="140" />
+              <button class="todo-add" aria-label="add task">+</button>
+            </div>
+            <ul class="todo-list"></ul>
+          `;
+          const input = el.querySelector('.todo-input');
+          const addBtn = el.querySelector('.todo-add');
+          const list   = el.querySelector('.todo-list');
+
+          function add() {
+            const text = input.value.trim();
+            if (!text) return;
+            items.push({ id: Date.now() + Math.random(), text, done: false });
+            input.value = '';
+            save(items);
+            renderList();
+          }
+          addBtn.addEventListener('click', add);
+          input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+
+          function renderList() {
+            list.innerHTML = items.map(it => `
+              <li class="todo-item ${it.done ? 'done' : ''}" data-id="${it.id}">
+                <button class="todo-check ${it.done ? 'checked' : ''}" aria-label="toggle"></button>
+                <span class="todo-text">${escapeHtml(it.text)}</span>
+                <button class="todo-del" aria-label="delete">×</button>
+              </li>
+            `).join('') || '<li style="color:var(--fg-dim);font-size:14px;padding:8px 4px;">no tasks yet</li>';
+
+            list.querySelectorAll('.todo-item').forEach(li => {
+              const id = Number(li.dataset.id);
+              li.querySelector('.todo-check').addEventListener('click', () => toggle(id));
+              li.querySelector('.todo-del').addEventListener('click', () => remove(id));
+            });
+          }
+
+          function toggle(id) {
+            const it = items.find(x => x.id === id);
+            if (!it) return;
+            it.done = !it.done;
+            save(items); renderList();
+          }
+          function remove(id) {
+            items = items.filter(x => x.id !== id);
+            save(items); renderList();
+          }
+          function escapeHtml(s) {
+            return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+          }
+
+          renderList();
+        }
+
+        render();
+      })();
+
+      (function weather() {
+        const el = document.getElementById('widget-weather');
+
+        // wttr weatherCode → glyph
+        const ICON = (code) => {
+          const c = Number(code);
+          if (c === 113) return '☀';                              // clear/sunny
+          if ([116].includes(c)) return '⛅';                      // partly cloudy
+          if ([119, 122].includes(c)) return '☁';                 // cloudy / overcast
+          if ([143, 248, 260].includes(c)) return '🌫';           // fog/mist
+          if ([176, 263, 266, 281, 284, 293, 296, 299, 302, 305, 308, 311, 314, 317, 350, 353, 356, 359, 386, 389].includes(c)) return '🌧';
+          if ([200].includes(c)) return '⛈';                      // thunder
+          if ([179, 182, 185, 227, 230, 320, 323, 326, 329, 332, 335, 338, 368, 371, 374, 377, 392, 395].includes(c)) return '❄';
+          return '🌡';
+        };
+
+        function render(state) {
+          if (state.error) {
+            el.innerHTML = `<h2>Weather · Dallas</h2><div class="wx-err">weather unavailable</div>`;
+            return;
+          }
+          const d = state.data;
+          el.innerHTML = `
+            <h2>Weather · ${d.area}</h2>
+            <div class="wx-main">
+              <div class="wx-icon">${ICON(d.code)}</div>
+              <div>
+                <div class="wx-temp">${d.tempF}°F</div>
+                <div class="wx-desc">${d.desc}</div>
+              </div>
+            </div>
+            <div class="wx-grid">
+              <div class="k">feels</div><div class="v">${d.feelsF}°F</div>
+              <div class="k">wind</div> <div class="v">${d.windMph} mph ${d.windDir}</div>
+              <div class="k">humidity</div><div class="v">${d.humidity}%</div>
+            </div>
+          `;
+        }
+
+        async function fetchWeather() {
+          try {
+            const res = await fetch(`https://wttr.in/${encodeURIComponent(CONFIG.weatherLocation)}?format=j1`);
+            if (!res.ok) throw new Error('http ' + res.status);
+            const j = await res.json();
+            const cc = j.current_condition[0];
+            const area = (j.nearest_area && j.nearest_area[0] && j.nearest_area[0].areaName[0].value) || CONFIG.weatherLocation;
+            render({ data: {
+              area,
+              tempF:    cc.temp_F,
+              feelsF:   cc.FeelsLikeF,
+              desc:     cc.weatherDesc[0].value,
+              windMph:  cc.windspeedMiles,
+              windDir:  cc.winddir16Point,
+              humidity: cc.humidity,
+              code:     cc.weatherCode,
+            }});
+          } catch (e) {
+            console.warn('[weather]', e);
+            render({ error: true });
+          }
+        }
+
+        render({ data: { area: CONFIG.weatherLocation, tempF: '--', feelsF: '--', desc: 'loading…', windMph: '--', windDir: '--', humidity: '--', code: 0 }});
+        fetchWeather();
+        setInterval(fetchWeather, CONFIG.weatherRefreshMs);
+      })();
+
+      (function github() {
+        const el = document.getElementById('widget-github');
+
+        const VERB = {
+          PushEvent:        'push',
+          PullRequestEvent: 'PR',
+          IssuesEvent:      'issue',
+          CreateEvent:      'create',
+          DeleteEvent:      'delete',
+          WatchEvent:       'star',
+          ForkEvent:        'fork',
+          ReleaseEvent:     'release',
+          CommitCommentEvent: 'comment',
+          IssueCommentEvent:  'comment',
+        };
+
+        function relTime(iso) {
+          const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+          if (s < 60)      return `${s}s ago`;
+          if (s < 3600)    return `${Math.floor(s/60)}m ago`;
+          if (s < 86400)   return `${Math.floor(s/3600)}h ago`;
+          return `${Math.floor(s/86400)}d ago`;
+        }
+
+        function shortRepo(full) {
+          const i = full.indexOf('/');
+          return i >= 0 ? full.slice(i+1) : full;
+        }
+
+        function buildSpark(events) {
+          // count events per day for last 14 days (oldest → newest)
+          const days = 14;
+          const buckets = new Array(days).fill(0);
+          const today = new Date(); today.setHours(0,0,0,0);
+          for (const ev of events) {
+            const d = new Date(ev.created_at); d.setHours(0,0,0,0);
+            const idx = days - 1 - Math.floor((today - d) / 86400000);
+            if (idx >= 0 && idx < days) buckets[idx]++;
+          }
+          return buckets.map(n => {
+            if (n === 0) return `<span class="lo">▯</span>`;
+            if (n < 3)   return `<span class="mid">▮</span>`;
+            return `<span class="hi">▮</span>`;
+          }).join('');
+        }
+
+        function render(state) {
+          if (state.error) {
+            el.innerHTML = `<h2>GitHub Pulse</h2><div class="gh-err">github pulse unavailable</div>`;
+            return;
+          }
+          const evs = state.events;
+          const total = evs.length;
+          const spark = buildSpark(evs);
+          const recent = evs.slice(0, 5).map(ev => `
+            <div class="gh-event">
+              <span class="gh-verb">${VERB[ev.type] || ev.type.replace('Event','').toLowerCase()}</span>
+              <span class="gh-repo">${shortRepo(ev.repo.name)}</span>
+              <span class="gh-when">${relTime(ev.created_at)}</span>
+            </div>
+          `).join('') || '<div style="color:var(--fg-dim)">no recent activity</div>';
+
+          el.innerHTML = `
+            <h2>GitHub Pulse · @${CONFIG.githubUser}</h2>
+            <div><span class="gh-spark">${spark}</span><span class="gh-count">${total} events / 14d</span></div>
+            <div class="gh-events">${recent}</div>
+          `;
+        }
+
+        async function fetchEvents() {
+          try {
+            const res = await fetch(`https://api.github.com/users/${encodeURIComponent(CONFIG.githubUser)}/events/public`, {
+              headers: { 'Accept': 'application/vnd.github+json' },
+            });
+            if (!res.ok) throw new Error('http ' + res.status);
+            const events = await res.json();
+            render({ events });
+          } catch (e) {
+            console.warn('[github]', e);
+            render({ error: true });
+          }
+        }
+
+        el.innerHTML = `<h2>GitHub Pulse · @${CONFIG.githubUser}</h2><div class="empty">loading…</div>`;
+        fetchEvents();
+        setInterval(fetchEvents, CONFIG.githubRefreshMs);
+      })();
+
+      (async function cron() {
+        const el = document.getElementById('widget-cron');
+
+        async function render() {
+          const data = await API.get('/api/cron/jobs');
+          if (!data || !API.live) {
+            el.innerHTML = `<h2>Cron Jobs</h2><div class="empty">—</div>`;
+            return;
+          }
+          if (!Array.isArray(data) || data.length === 0) {
+            el.innerHTML = `<h2>Cron Jobs</h2><div class="empty">no scheduled jobs</div>`;
+            return;
+          }
+          const rows = data.map(job => `
+            <tr>
+              <td>${job.name || '—'}</td>
+              <td>${job.state || '—'}</td>
+              <td>${job.schedule || '—'}</td>
+              <td>${job.lastRun || '—'}</td>
+            </tr>
+          `).join('');
+          el.innerHTML = `
+            <h2>Cron Jobs</h2>
+            <table class="widget-table">
+              <tr><td>Job</td><td>State</td><td>Schedule</td><td>Last Run</td></tr>
+              ${rows}
+            </table>
+          `;
+        }
+
+        await render();
+      })();
+
+      (async function sessions() {
+        const el = document.getElementById('widget-sessions');
+
+        async function render() {
+          const data = await API.get('/api/sessions');
+          if (!data || !API.live) {
+            el.innerHTML = `<h2>Recent Sessions</h2><div class="empty">—</div>`;
+            return;
+          }
+          const list = data.sessions || [];
+          if (list.length === 0) {
+            el.innerHTML = `<h2>Recent Sessions</h2><div class="empty">no sessions</div>`;
+            return;
+          }
+          const recent = list.slice(0, 5).map(s => `
+            <div class="stat-row">
+              <span class="label">${s.model || 'unknown'}</span>
+              <span class="value">${s.messages || 0}m · ${s.timeAgo || '—'}</span>
+            </div>
+          `).join('');
+          el.innerHTML = `<h2>Recent Sessions</h2>${recent}`;
+        }
+
+        await render();
+      })();
+
+      (async function analytics() {
+        const el = document.getElementById('widget-analytics');
+
+        async function render() {
+          const data = await API.get('/api/analytics/usage?days=7');
+          if (!data || !API.live) {
+            el.innerHTML = `<h2>Usage Analytics</h2><div class="empty">—</div>`;
+            return;
+          }
+          let totalIn = 0, totalOut = 0, totalSessions = 0;
+          if (data.daily && Array.isArray(data.daily)) {
+            for (const day of data.daily) {
+              totalIn += day.inputTokens || 0;
+              totalOut += day.outputTokens || 0;
+            }
+          }
+          totalSessions = data.sessionCount || 0;
+          const formatTokens = n => {
+            if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            return String(n);
+          };
+          let spark = '▁▂▃▄▅▆▇█';
+          if (data.daily && Array.isArray(data.daily)) {
+            const max = Math.max(...data.daily.map(d => (d.inputTokens || 0) + (d.outputTokens || 0)));
+            const bars = data.daily.map(d => {
+              const total = (d.inputTokens || 0) + (d.outputTokens || 0);
+              if (max === 0) return 0;
+              return Math.ceil((total / max) * 8);
+            });
+            spark = bars.map(i => '▁▂▃▄▅▆▇█'[Math.min(i, 8)]).join('');
+          }
+          el.innerHTML = `
+            <h2>Usage Analytics · 7 days</h2>
+            <div style="display:flex;gap:20px;align-items:flex-start;">
+              <div>
+                <div class="sparkline">${spark}</div>
+                <div style="font-size:12px;color:var(--fg-dim);margin-top:8px;">
+                  ${formatTokens(totalIn)} in / ${formatTokens(totalOut)} out
+                </div>
+              </div>
+              <div style="flex:1;">
+                <div class="stat-row">
+                  <span class="label">sessions</span>
+                  <span class="value">${totalSessions}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        await render();
+      })();
+
+      (async function skills() {
+        const el = document.getElementById('widget-skills');
+
+        async function render() {
+          const data = await API.get('/api/skills');
+          if (!data || !API.live) {
+            el.innerHTML = `<h2>Skills</h2><div class="empty">—</div>`;
+            return;
+          }
+          if (!Array.isArray(data) || data.length === 0) {
+            el.innerHTML = `<h2>Skills</h2><div class="empty">no skills</div>`;
+            return;
+          }
+          const enabled = data.filter(s => s.enabled).length;
+          const total = data.length;
+          const names = data.filter(s => s.enabled).slice(0, 5).map(s => s.name).join(', ');
+          el.innerHTML = `
+            <h2>Skills</h2>
+            <div class="stat-row">
+              <span class="label">enabled</span>
+              <span class="value">${enabled} / ${total}</span>
+            </div>
+            <div style="font-size:12px;color:var(--fg-dim);margin-top:8px;word-break:break-word;">
+              ${names || 'none'}
+            </div>
+          `;
+        }
+
+        render();
+      })();
+
       if (API.live) {
         setInterval(async () => {
           await Promise.all([
@@ -917,27 +917,27 @@
               const data = await API.get('/api/status');
               if (data) {
                 const el = document.getElementById('widget-system');
-                const gatewayDot = data.gateway ? 'green' : 'red';
-                const discordDot = data.discord ? 'green' : 'red';
+                const gatewayDot = data.gateway_state === 'running' ? 'green' : 'red';
+                const discordDot = (data.gateway_platforms?.discord?.state === 'connected') ? 'green' : 'red';
                 el.innerHTML = `
                   <h2>System</h2>
                   <div class="stat-row">
                     <span class="label">gateway</span>
                     <span class="badge">
                       <span class="badge-dot ${gatewayDot}"></span>
-                      <span>${data.gateway ? 'online' : 'offline'}</span>
+                      <span>${data.gateway_state || 'offline'}</span>
                     </span>
                   </div>
                   <div class="stat-row">
                     <span class="label">discord</span>
                     <span class="badge">
                       <span class="badge-dot ${discordDot}"></span>
-                      <span>${data.discord ? 'online' : 'offline'}</span>
+                      <span>${data.gateway_platforms?.discord?.state || 'offline'}</span>
                     </span>
                   </div>
                   <div class="stat-row">
                     <span class="label">sessions</span>
-                    <span class="value">${data.sessions || 0}</span>
+                    <span class="value">${data.active_sessions || 0}</span>
                   </div>
                   <div class="stat-row">
                     <span class="label">version</span>
