@@ -101,6 +101,55 @@
       font-size: 16px;
     }
 
+    .hermes-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--fg-dim); }
+    .hermes-row span:last-child { color: var(--fg); font-family: var(--font-mono); }
+    .hermes-status {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 16px; color: var(--fg);
+    }
+    .hermes-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 10px var(--accent);
+    }
+    .hermes-dot.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+
+    .proj-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .proj {
+      flex: 1 1 180px;
+      min-width: 180px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(0, 255, 208, 0.04);
+      border: 1px solid rgba(0, 255, 208, 0.18);
+      display: flex; flex-direction: column; gap: 6px;
+      text-decoration: none;
+      color: var(--fg);
+      min-height: 88px;
+      transition: background 120ms ease, transform 120ms ease;
+    }
+    .proj:active { transform: scale(0.98); background: rgba(0,255,208,0.10); }
+    .proj-label { font-size: 16px; font-weight: 600; color: var(--accent); }
+    .proj-desc  { font-size: 12px; color: var(--fg-dim); font-family: var(--font-mono); }
+    .proj-cta   { margin-top: auto; font-size: 12px; color: var(--accent-2); }
+
+    .discord-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 10px;
+      padding: 16px 20px;
+      margin-top: auto;
+      min-height: 56px;             /* touch-friendly: well above 44px */
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0,255,208,0.18), rgba(122,252,255,0.10));
+      border: 1px solid rgba(0,255,208,0.35);
+      color: var(--fg);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+    .discord-btn:active { transform: scale(0.97); background: rgba(0,255,208,0.22); }
+    .discord-sub { color: var(--fg-dim); font-size: 13px; }
+
     /* responsive */
     @media (max-width: 1000px) {
       main#grid { grid-template-columns: repeat(2, 1fr); }
@@ -154,8 +203,114 @@
 
   <script>
     'use strict';
-    const CONFIG = {};  // populated in Phase 3
-    // widget IIFEs land here in later phases
+    const CONFIG = {
+      // Personal
+      githubUser: 'zaimali10',
+      discordChannelUrl: 'https://discord.com/channels/@me',   // replace with actual channel deep-link
+      weatherLocation: 'Dallas',
+
+      // Projects (label, repo full name, description)
+      projects: [
+        { label: 'Fam',          repo: 'zaimali10/couples_v1',        desc: 'couples_v1' },
+        { label: 'Companion',    repo: 'zaimali10/companion_v1',      desc: 'companion_v1' },
+        { label: 'CRE Analyzer', repo: 'zaimali10/property-evaluator',desc: 'property-evaluator' },
+      ],
+
+      // Refresh cadences (ms)
+      clockTickMs:     1000,
+      quoteRotateMs:   60_000,
+      weatherRefreshMs: 30 * 60_000,  // 30 minutes
+      githubRefreshMs:  10 * 60_000,  // 10 minutes
+
+      // Hermes placeholder
+      hermes: {
+        status: 'online',
+        lastRunMinutesAgo: 12,
+        queueDepth: 3,
+        uptimeText: '4d 6h',
+      },
+
+      // Quotes
+      quotes: [
+        { text: 'The cave you fear to enter holds the treasure you seek.', author: 'Joseph Campbell' },
+        { text: 'Discipline equals freedom.', author: 'Jocko Willink' },
+        { text: 'You do not rise to the level of your goals. You fall to the level of your systems.', author: 'James Clear' },
+        { text: 'What is essential is invisible to the eye.', author: 'Antoine de Saint-Exupéry' },
+        { text: 'The obstacle is the way.', author: 'Marcus Aurelius' },
+        { text: 'Make the thing, then make the thing better.', author: '—' },
+        { text: 'Slow is smooth, smooth is fast.', author: 'Navy SEALs' },
+      ],
+    };
+
+    (function clock() {
+      const elTime = document.getElementById('clock');
+      const elDate = document.getElementById('date');
+      const pad = n => String(n).padStart(2, '0');
+      const DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+      function tick() {
+        const d = new Date();
+        elTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        elDate.textContent = `${DAY[d.getDay()]} ${pad(d.getDate())} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+      }
+      tick();
+      setInterval(tick, CONFIG.clockTickMs);
+    })();
+
+    (function quote() {
+      const el = document.getElementById('widget-quote');
+      let i = Math.floor(Math.random() * CONFIG.quotes.length);
+
+      function render() {
+        const q = CONFIG.quotes[i];
+        el.innerHTML = `"${q.text}" — <span style="color:var(--accent-2)">${q.author}</span>`;
+      }
+      render();
+      setInterval(() => {
+        i = (i + 1) % CONFIG.quotes.length;
+        render();
+      }, CONFIG.quoteRotateMs);
+    })();
+
+    (function hermes() {
+      const el = document.getElementById('widget-hermes');
+      const h = CONFIG.hermes;
+      const dotClass = h.status === 'online' ? '' : 'offline';
+      el.innerHTML = `
+        <h2>Hermes</h2>
+        <div class="hermes-status">
+          <span class="hermes-dot ${dotClass}"></span>
+          <span>${h.status}</span>
+        </div>
+        <div class="hermes-row"><span>last run</span><span>${h.lastRunMinutesAgo}m ago</span></div>
+        <div class="hermes-row"><span>queue</span><span>${h.queueDepth} tasks</span></div>
+        <div class="hermes-row"><span>uptime</span><span>${h.uptimeText}</span></div>
+      `;
+    })();
+
+    (function projects() {
+      const el = document.getElementById('widget-projects');
+      const cards = CONFIG.projects.map(p => `
+        <a class="proj" href="https://github.com/${p.repo}" target="_blank" rel="noopener">
+          <div class="proj-label">${p.label}</div>
+          <div class="proj-desc">${p.desc}</div>
+          <div class="proj-cta">open ↗</div>
+        </a>
+      `).join('');
+      el.innerHTML = `<h2>Projects</h2><div class="proj-row">${cards}</div>`;
+    })();
+
+    (function discord() {
+      const el = document.getElementById('widget-discord');
+      el.innerHTML = `
+        <h2>Quick Chat</h2>
+        <div class="discord-sub">Send a message to your agents in #jarvis</div>
+        <a class="discord-btn" href="${CONFIG.discordChannelUrl}" target="_blank" rel="noopener">
+          Open #jarvis →
+        </a>
+      `;
+    })();
   </script>
 </body>
 </html>
