@@ -104,11 +104,14 @@
     /* ── Dashboard grid ───────────────────────────────────────────── */
     main#dashboard {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(var(--cols, 3), 1fr);
+      grid-auto-flow: row dense;
       grid-auto-rows: minmax(180px, auto);
       gap: var(--gap);
       padding: 8px 32px 24px;
     }
+    .card[data-span="2"]   { grid-column: span 2; }
+    .card[data-span="full"] { grid-column: 1 / -1; }
     .card {
       background: var(--glass-bg);
       border: 1px solid var(--glass-br);
@@ -133,8 +136,7 @@
       opacity: 0.85;
     }
     .card .empty { color: var(--fg-dim); font-size: 14px; }
-    .span-2     { grid-column: span 2; }
-    .span-full  { grid-column: 1 / -1; }
+    /* .span-2 / .span-full removed in Phase 1 — now using data-span attributes */
 
     /* ── To-Do tab (roomier) ──────────────────────────────────────── */
     #todo-tab {
@@ -609,13 +611,9 @@
     }
 
     /* ── Responsive ───────────────────────────────────────────────── */
-    @media (max-width: 1000px) {
-      main#dashboard { grid-template-columns: repeat(2, 1fr); }
-      .kb-board      { grid-template-columns: 1fr; }
-      .mon-grid      { grid-template-columns: 1fr; }
-    }
+    /* Grid column count is now handled by JS (--cols) — see layout.js */
     @media (max-width: 700px) {
-      main#dashboard { grid-template-columns: 1fr; }
+      /* main#dashboard grid is now handled by --cols from layout.js */
       header { flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px; }
       #clock { font-size: 44px; }
       nav.tabs  { padding: 0 16px 12px; overflow-x: auto; }
@@ -643,6 +641,7 @@
     <div id="clock">00:00:00</div>
     <div id="date">— — —</div>
     <div style="display:flex;align-items:center;gap:12px">
+      <button class="theme-btn" id="reset-layout-btn" aria-label="reset widget layout" title="Reset widget layout">⟳</button>
       <button class="theme-btn" id="theme-btn" aria-label="toggle theme">🌓</button>
       <span id="mode-indicator" class="mode-indicator">checking...</span>
     </div>
@@ -661,15 +660,15 @@
     <section class="card" id="widget-system"><h2>System</h2><div class="empty">—</div></section>
     <section class="card" id="widget-skills"><h2>Skills</h2><div class="empty">—</div></section>
 
-    <section class="card span-full" id="widget-cron"><h2>Cron Jobs</h2><div class="empty">—</div></section>
+    <section class="card" id="widget-cron"><h2>Cron Jobs</h2><div class="empty">—</div></section>
 
-    <section class="card span-2" id="widget-analytics"><h2>Usage Analytics</h2><div class="empty">—</div></section>
+    <section class="card" id="widget-analytics"><h2>Usage Analytics</h2><div class="empty">—</div></section>
     <section class="card" id="widget-monitor"><h2>System Monitor</h2><div class="empty">—</div></section>
 
-    <section class="card span-2" id="widget-projects"><h2>Projects</h2><div class="empty">—</div></section>
+    <section class="card" id="widget-projects"><h2>Projects</h2><div class="empty">—</div></section>
     <section class="card" id="widget-discord"><h2>Quick Chat</h2><div class="empty">—</div></section>
 
-    <section class="card span-2" id="widget-github"><h2>GitHub Pulse</h2><div class="empty">loading…</div></section>
+    <section class="card" id="widget-github"><h2>GitHub Pulse</h2><div class="empty">loading…</div></section>
     <section class="card" id="widget-sessions"><h2>Recent Sessions</h2><div class="empty">—</div></section>
   </main>
 

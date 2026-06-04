@@ -1,5 +1,6 @@
 import { API }      from './lib/api.js';
 import { CONFIG }   from './lib/config.js';
+import { applyLayout, loadLayout, watchResize, resetLayout } from './lib/layout.js';
 import { mountClock }     from './widgets/clock.js';
 import { mountQuote }     from './widgets/quote.js';
 import { mountWeather }   from './widgets/weather.js';
@@ -54,6 +55,9 @@ function setupTabs() {
 
   setupTabs();
 
+  // Phase 1: data-driven layout — reorder widgets and set spans
+  applyLayout(loadLayout());
+
   mountTheme();
   mountClock();
   mountQuote();
@@ -72,6 +76,12 @@ function setupTabs() {
     mountAnalytics(),
     mountSkills(),
   ]);
+
+  // Watch container resize — auto-adjusts --cols on iPad/screen resize
+  watchResize();
+
+  // Wire reset layout button
+  document.getElementById('reset-layout-btn')?.addEventListener('click', resetLayout);
 
   if (API.live) {
     setInterval(() => {
