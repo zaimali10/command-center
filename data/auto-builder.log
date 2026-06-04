@@ -116,3 +116,10 @@
 [2026-06-04 15:13:24 Central Daylight Time] migrate-fetch-workqueue-gateway: started (PID 8676, model=claude-sonnet-4-20250514)
 [2026-06-04 15:13:24 Central Daylight Time] Started: migrate-fetch-workqueue-gateway
 [2026-06-04 15:13:24 Central Daylight Time] Queue: migrate-fetch-workqueue-gateway → in_progress
+[2026-06-04 15:28:28 Central Daylight Time] Tick starting...
+[2026-06-04 15:28:30 Central Daylight Time] migrate-fetch-workqueue-gateway: done file found — task completed
+[2026-06-04 15:28:30 Central Daylight Time] migrate-fetch-workqueue-gateway: worker process died but result exists — processing
+[2026-06-04 15:28:30 Central Daylight Time] migrate-fetch-workqueue-gateway: Claude Code OK (from dead process)
+[2026-06-04 15:28:32 Central Daylight Time] Build: OK
+[2026-06-04 15:28:33 Central Daylight Time] Verify: OK (614 bytes, 200)
+[2026-06-04 15:28:33 Central Daylight Time] Queue: migrate-fetch-workqueue-gateway → done
