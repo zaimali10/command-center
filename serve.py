@@ -287,6 +287,13 @@ def start_telemetry():
         return False
 
 if __name__ == "__main__":
+    # Clear stale bytecode cache to prevent version mismatch crashes
+    import pathlib
+    pycache = HERE / "__pycache__"
+    if pycache.exists():
+        import shutil
+        shutil.rmtree(pycache, ignore_errors=True)
+
     print(f"🏗️  Command Center Server")
     print(f"   Hermes API:  {HERMES_API}")
 

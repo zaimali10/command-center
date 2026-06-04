@@ -64,10 +64,16 @@ netsh advfirewall firewall add rule name="Hermes Dashboard 9119" dir=in action=a
 netsh advfirewall firewall add rule name="Command Center 8080" dir=in action=allow protocol=TCP localport=8080 profile=private description="Allow Command Center from iPad on home WiFi" >nul 2>&1
 echo  ✓ Firewall rules added
 
+REM --- Clear stale bytecode cache ---
+echo.
+echo  🧹 Clearing stale bytecode cache...
+if exist "%PROJECT_DIR%\__pycache__" rmdir /s /q "%PROJECT_DIR%\__pycache__"
+echo  ✓ Cache cleared
+
 REM --- Start the server now ---
 echo.
 echo  🚀 Starting Command Center...
-start "Command Center" /B /MIN python "%SCRIPT%"
+start "Command Center" /B /MIN "%PYTHON%" "%SCRIPT%"
 
 echo.
 echo  ┌─────────────────────────────────────────────┐
