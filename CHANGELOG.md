@@ -63,3 +63,18 @@ _A running log of every feature, fix, and decision made while building._
 - ✅ Kanban: card creation, tap-advance, long-press edit, delete, drag ghost with drop-highlight
 - ✅ Telemetry auto-starts with serve.py on boot via startup shortcut
 - ✅ Notebook (Zaim-Laptop, Windows 10, 12 cores, 17.1 GB RAM, 999 GB SSD)
+
+### 2026-06-02 — Round 1.5: Admin Auto-Start (Zero User Touch After Boot)
+
+**Decision:** Windows requires admin rights for firewall changes. Zaim approved a one-time admin setup rather than manual .bat runs.
+
+**Solution:**
+1. `setup-hermes-autostart.bat` — self-elevating script (double-click, approve UAC once):
+   - Removes old startup shortcut
+   - Creates a **scheduled task** running at logon with **/rl HIGHEST** (silent admin, no UAC)
+   - Applies firewall rules immediately
+   - Starts Command Center
+2. `serve.py` — now detects admin via `ctypes.windll.shell32.IsUserAnAdmin()` and applies firewall rules idempotently
+3. Future boots: scheduled task fires silently 30s after logon with full admin privileges
+
+**Trade-off accepted:** One UAC click during setup. Zero interaction ever after.

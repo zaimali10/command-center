@@ -210,6 +210,39 @@ def _kill_process_on_port(port):
         pass
 
 
+def ensure_firewall_rules():
+    """Add Windows Firewall rules if running as admin (idempotent)."""
+    try:
+        import ctypes
+        is_admin = ctypes.windll.shell32.IsUserAnAdmin()
+    except Exception:
+        is_admin = False
+
+    if not is_admin:
+        print("[Command Center] Not running as admin — skipping firewall setup.")
+        return False
+
+    print("[Command Center] Admin detected. Ensuring firewall rules...")
+    rules = [
+        ("Hermes Dashboard 9119", 9119, "Allow Hermes Agent Dashboard from iPad on home WiFi"),
+        ("Command Center 8080", 8080, "Allow Command Center from iPad on home WiFi"),
+    ]
+    for name, port, desc in rules:
+        result = subprocess.run(
+            ["netsh", "advfirewall", "firewall", "add", "rule",
+             f"name={name}", "dir=in", "action=allow",
+             "protocol=TCP", f"localport={port}",
+             "profile=private", f"description={desc}"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if "OK" in result.stdout or "already exists" in result.stdout.lower():
+            print(f"[Command Center]   ✓ {name} (port {port})")
+        else:
+            # Rule may already exist — netsh returns "ok" for new, but
+            # idempotent re-add shows "already exists" depending on version.
+            print(f"[Command Center]   {name} (port {port}): {result.stdout.strip() or result.stderr.strip()}")
+    return True
+
 def start_telemetry():
     """Start the system telemetry daemon in background if not already running."""
     telemetry_py = HERE / "telemetry.py"
@@ -253,6 +286,9 @@ if __name__ == "__main__":
 
     # Check/start Hermes dashboard
     ensure_dashboard_running()
+
+    # Apply firewall rules if running as admin
+    ensure_firewall_rules()
 
     # Start system telemetry daemon
     start_telemetry()
