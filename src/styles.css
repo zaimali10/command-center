@@ -417,15 +417,6 @@ footer#widget-quote {
 .wq-cron-error { color: var(--danger); background: rgba(255,85,119,0.1); }
 .wq-cron-details .stat-row { padding: 4px 0; }
 
-/* ── Weather ──────────────────────────────────────────────────── */
-.wx-main { display: flex; align-items: center; gap: 14px; }
-.wx-icon { font-size: 44px; line-height: 1; }
-.wx-temp { font-family: var(--font-mono); font-size: 36px; color: var(--accent); text-shadow: 0 0 12px rgba(0,255,208,0.35); }
-.wx-desc { color: var(--fg-dim); font-size: 14px; }
-.wx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 14px; font-size: 13px; }
-.wx-grid .k { color: var(--fg-dim); }
-.wx-grid .v { color: var(--fg); font-family: var(--font-mono); }
-.wx-err { color: var(--danger); font-size: 13px; }
 
 /* ── GitHub ───────────────────────────────────────────────────── */
 .gh-spark { font-family: var(--font-mono); font-size: 22px; letter-spacing: 4px; color: var(--accent); line-height: 1; }

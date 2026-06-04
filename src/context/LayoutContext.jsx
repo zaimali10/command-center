@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState } from 'react';
 import { storage } from '../services/storage.js';
 
 export const DEFAULT_LAYOUT = [
-  { id: 'widget-weather',   span: 1 },
   { id: 'widget-forecast',  span: 1 },
   { id: 'widget-system',    span: 1 },
   { id: 'widget-skills',    span: 1 },

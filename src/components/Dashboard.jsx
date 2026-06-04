@@ -15,7 +15,6 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useLayout } from '../context/LayoutContext.jsx';
-import Weather from './widgets/Weather.jsx';
 import Forecast from './widgets/Forecast.jsx';
 import System from './widgets/System.jsx';
 import Skills from './widgets/Skills.jsx';
@@ -28,7 +27,6 @@ import Sessions from './widgets/Sessions.jsx';
 import Monitor from './widgets/Monitor.jsx';
 
 const WIDGET_COMPONENTS = {
-  'widget-weather':   Weather,
   'widget-forecast':  Forecast,
   'widget-system':    System,
   'widget-skills':    Skills,
@@ -42,7 +40,6 @@ const WIDGET_COMPONENTS = {
 };
 
 const TITLE_MAP = {
-  'widget-weather':   'Weather · Dallas',
   'widget-forecast':  '3-Day Forecast',
   'widget-system':    'System',
   'widget-skills':    'Skills',

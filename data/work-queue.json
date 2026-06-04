@@ -12,10 +12,11 @@
     {
       "id": "remove-weather-feature",
       "label": "Remove Weather widget entirely (not needed)",
-      "status": "waiting",
+      "status": "done",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Remove the Weather widget from the Command Center project at ~/Projects/command-center. (1) Delete src/components/widgets/Weather.jsx entirely. (2) In src/components/Dashboard.jsx, remove the line `import Weather from './widgets/Weather.jsx';` and remove the `'widget-weather': Weather,` entry from WIDGET_COMPONENTS, and remove the `'widget-weather': 'Weather \u00b7 Dallas',` entry from TITLE_MAP. (3) In src/styles.css, find and remove the entire CSS section that starts at `/* \u2500\u2500 Weather \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */` (including all rules under it until the next section). (4) After all changes, run `npm run build` from ~/Projects/command-center/ and verify zero errors. Do NOT modify any other files."
+      "prompt": "Remove the Weather widget from the Command Center project at ~/Projects/command-center. (1) Delete src/components/widgets/Weather.jsx entirely. (2) In src/components/Dashboard.jsx, remove the line `import Weather from './widgets/Weather.jsx';` and remove the `'widget-weather': Weather,` entry from WIDGET_COMPONENTS, and remove the `'widget-weather': 'Weather \u00b7 Dallas',` entry from TITLE_MAP. (3) In src/styles.css, find and remove the entire CSS section that starts at `/* \u2500\u2500 Weather \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */` (including all rules under it until the next section). (4) After all changes, run `npm run build` from ~/Projects/command-center/ and verify zero errors. Do NOT modify any other files.",
+      "completed_at": "2026-06-04T14:58:20-0500"
     },
     {
       "id": "migrate-fetch-workqueue-gateway",
@@ -82,5 +83,5 @@
       "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
     }
   ],
-  "last_updated": "2026-06-04T14:28:04-0500"
+  "last_updated": "2026-06-04T14:58:20-0500"
 }
