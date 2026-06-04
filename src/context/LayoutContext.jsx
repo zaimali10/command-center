@@ -1,17 +1,17 @@
 import React, { createContext, useContext, useState } from 'react';
 
 export const DEFAULT_LAYOUT = [
-  { id: 'clock',     span: 'full' },
-  { id: 'weather',   span: '1' },
-  { id: 'github',    span: '1' },
-  { id: 'hermes',    span: '1' },
-  { id: 'projects',  span: '2' },
-  { id: 'discord',   span: '1' },
-  { id: 'sessions',  span: '1' },
-  { id: 'analytics', span: '1' },
-  { id: 'system',    span: '2' },
-  { id: 'cron',      span: '1' },
-  { id: 'skills',    span: '1' },
+  { id: 'widget-weather',   span: 1 },
+  { id: 'widget-forecast',  span: 1 },
+  { id: 'widget-system',    span: 1 },
+  { id: 'widget-skills',    span: 1 },
+  { id: 'widget-cron',      span: 'full' },
+  { id: 'widget-analytics', span: 2 },
+  { id: 'widget-monitor',   span: 1 },
+  { id: 'widget-projects',  span: 2 },
+  { id: 'widget-discord',   span: 1 },
+  { id: 'widget-github',    span: 2 },
+  { id: 'widget-sessions',  span: 1 },
 ];
 
 const LayoutContext = createContext(null);
@@ -30,15 +30,20 @@ function loadLayout() {
 }
 
 export function LayoutProvider({ children }) {
-  const [widgets, setWidgetsState] = useState(loadLayout);
+  const [order, setOrderState] = useState(loadLayout);
 
-  function setWidgets(newWidgets) {
-    setWidgetsState(newWidgets);
-    localStorage.setItem('cc.layout.v1', JSON.stringify(newWidgets));
+  function setOrder(newOrder) {
+    setOrderState(newOrder);
+    localStorage.setItem('cc.layout.v1', JSON.stringify(newOrder));
+  }
+
+  function resetLayout() {
+    localStorage.removeItem('cc.layout.v1');
+    window.location.reload();
   }
 
   return (
-    <LayoutContext.Provider value={{ widgets, setWidgets }}>
+    <LayoutContext.Provider value={{ order, setOrder, resetLayout }}>
       {children}
     </LayoutContext.Provider>
   );

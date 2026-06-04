@@ -16,6 +16,20 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useLayout } from '../context/LayoutContext.jsx';
 
+const TITLE_MAP = {
+  'widget-weather':   'Weather · Dallas',
+  'widget-forecast':  '3-Day Forecast',
+  'widget-system':    'System',
+  'widget-skills':    'Skills',
+  'widget-cron':      'Cron Jobs',
+  'widget-analytics': 'Usage Analytics',
+  'widget-monitor':   'System Monitor',
+  'widget-projects':  'Projects',
+  'widget-discord':   'Quick Chat',
+  'widget-github':    'GitHub Pulse',
+  'widget-sessions':  'Recent Sessions',
+};
+
 function SortableCard({ id, span, children }) {
   const {
     attributes,
@@ -26,15 +40,21 @@ function SortableCard({ id, span, children }) {
     isDragging,
   } = useSortable({ id });
 
+  const gridColumn =
+    span === 'full' ? '1 / -1' :
+    span === 2      ? 'span 2' :
+    undefined;
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    ...(gridColumn ? { gridColumn } : {}),
   };
 
-  const title = id.charAt(0).toUpperCase() + id.slice(1);
+  const title = TITLE_MAP[id] || id;
 
   return (
-    <div
+    <section
       ref={setNodeRef}
       style={style}
       className={`card${isDragging ? ' cc-dragging' : ''}`}
@@ -43,12 +63,12 @@ function SortableCard({ id, span, children }) {
       <h2 {...attributes} {...listeners}>{title}</h2>
       <p className="empty">widget placeholder</p>
       {children}
-    </div>
+    </section>
   );
 }
 
 export default function Dashboard() {
-  const { widgets, setWidgets } = useLayout();
+  const { order, setOrder } = useLayout();
   const [activeId, setActiveId] = useState(null);
 
   const sensors = useSensors(
@@ -65,16 +85,14 @@ export default function Dashboard() {
     const { active, over } = event;
     setActiveId(null);
     if (over && active.id !== over.id) {
-      const oldIndex = widgets.findIndex(w => w.id === active.id);
-      const newIndex = widgets.findIndex(w => w.id === over.id);
-      setWidgets(arrayMove(widgets, oldIndex, newIndex));
+      const oldIndex = order.findIndex(w => w.id === active.id);
+      const newIndex = order.findIndex(w => w.id === over.id);
+      setOrder(arrayMove(order, oldIndex, newIndex));
     }
   }
 
-  const activeWidget = activeId ? widgets.find(w => w.id === activeId) : null;
-  const activeTitle = activeWidget
-    ? activeWidget.id.charAt(0).toUpperCase() + activeWidget.id.slice(1)
-    : null;
+  const activeWidget = activeId ? order.find(w => w.id === activeId) : null;
+  const activeTitle = activeWidget ? (TITLE_MAP[activeWidget.id] || activeWidget.id) : null;
 
   return (
     <main id="dashboard">
@@ -85,10 +103,10 @@ export default function Dashboard() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={widgets.map(w => w.id)}
+          items={order.map(w => w.id)}
           strategy={rectSortingStrategy}
         >
-          {widgets.map(widget => (
+          {order.map(widget => (
             <SortableCard key={widget.id} id={widget.id} span={widget.span} />
           ))}
         </SortableContext>

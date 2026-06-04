@@ -1,15 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import { LayoutProvider } from './context/LayoutContext.jsx';
+import { useTheme } from './context/ThemeContext.jsx';
+import { useLayout } from './context/LayoutContext.jsx';
 import Dashboard from './components/Dashboard.jsx';
 
+const TAB_STORAGE_KEY = 'cc.tab.v1';
+const VALID_TABS = ['dashboard', 'todo', 'kanban'];
+
+function loadTab() {
+  try {
+    const stored = localStorage.getItem(TAB_STORAGE_KEY);
+    if (stored && VALID_TABS.includes(stored)) return stored;
+  } catch {
+    // fall through
+  }
+  return 'dashboard';
+}
+
 function AppInner() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const { toggleTheme } = useTheme();
+  const { resetLayout } = useLayout();
+  const [activeTab, setActiveTab] = useState(loadTab);
   const [clock, setClock] = useState('00:00:00');
   const [date, setDate] = useState('');
 
+  function handleSetTab(tab) {
+    setActiveTab(tab);
+    localStorage.setItem(TAB_STORAGE_KEY, tab);
+  }
+
   useEffect(() => {
-    // Set initial date
     const formatDate = () => {
       const now = new Date();
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -22,7 +43,6 @@ function AppInner() {
     };
     setDate(formatDate());
 
-    // Update clock every second
     const updateClock = () => {
       const now = new Date();
       const hours = String(now.getHours()).padStart(2, '0');
@@ -31,7 +51,7 @@ function AppInner() {
       setClock(`${hours}:${minutes}:${seconds}`);
     };
 
-    updateClock(); // Set initial clock value
+    updateClock();
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -41,25 +61,29 @@ function AppInner() {
       <header>
         <div id="clock">{clock}</div>
         <div id="date">{date}</div>
-        <div className="mode-indicator static">STATIC</div>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <button className="theme-btn" id="reset-layout-btn" onClick={resetLayout}>⟳</button>
+          <button className="theme-btn" id="theme-btn" onClick={toggleTheme}>🌓</button>
+          <span className="mode-indicator static">STATIC</span>
+        </div>
       </header>
 
       <nav className="tabs">
         <button
           className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')}
+          onClick={() => handleSetTab('dashboard')}
         >
           Dashboard
         </button>
         <button
           className={`tab-btn ${activeTab === 'todo' ? 'active' : ''}`}
-          onClick={() => setActiveTab('todo')}
+          onClick={() => handleSetTab('todo')}
         >
           To-Do
         </button>
         <button
           className={`tab-btn ${activeTab === 'kanban' ? 'active' : ''}`}
-          onClick={() => setActiveTab('kanban')}
+          onClick={() => handleSetTab('kanban')}
         >
           Kanban
         </button>
