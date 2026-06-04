@@ -20,13 +20,23 @@ import Forecast from './widgets/Forecast.jsx';
 import System from './widgets/System.jsx';
 import Skills from './widgets/Skills.jsx';
 import Cron from './widgets/Cron.jsx';
+import Github from './widgets/Github.jsx';
+import Projects from './widgets/Projects.jsx';
+import Discord from './widgets/Discord.jsx';
+import Analytics from './widgets/Analytics.jsx';
+import Sessions from './widgets/Sessions.jsx';
 
 const WIDGET_COMPONENTS = {
-  'widget-weather':  Weather,
-  'widget-forecast': Forecast,
-  'widget-system':   System,
-  'widget-skills':   Skills,
-  'widget-cron':     Cron,
+  'widget-weather':   Weather,
+  'widget-forecast':  Forecast,
+  'widget-system':    System,
+  'widget-skills':    Skills,
+  'widget-cron':      Cron,
+  'widget-github':    Github,
+  'widget-projects':  Projects,
+  'widget-discord':   Discord,
+  'widget-analytics': Analytics,
+  'widget-sessions':  Sessions,
 };
 
 const TITLE_MAP = {
