@@ -4,6 +4,8 @@ import { LayoutProvider } from './context/LayoutContext.jsx';
 import { useTheme } from './context/ThemeContext.jsx';
 import { useLayout } from './context/LayoutContext.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import Todo from './components/widgets/Todo.jsx';
+import Kanban from './components/widgets/Kanban.jsx';
 
 const TAB_STORAGE_KEY = 'cc.tab.v1';
 const VALID_TABS = ['dashboard', 'todo', 'kanban'];
@@ -96,15 +98,12 @@ function AppInner() {
       <div id="todo-tab" className={`tab-panel ${activeTab === 'todo' ? 'active' : ''}`}>
         <div className="card">
           <h2>To-Do</h2>
-          <p className="empty">Coming soon</p>
+          <Todo />
         </div>
       </div>
 
       <div id="kanban-tab" className={`tab-panel ${activeTab === 'kanban' ? 'active' : ''}`}>
-        <div className="card">
-          <h2>Kanban</h2>
-          <p className="empty">Coming soon</p>
-        </div>
+        <Kanban />
       </div>
     </>
   );

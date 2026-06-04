@@ -25,6 +25,7 @@ import Projects from './widgets/Projects.jsx';
 import Discord from './widgets/Discord.jsx';
 import Analytics from './widgets/Analytics.jsx';
 import Sessions from './widgets/Sessions.jsx';
+import Monitor from './widgets/Monitor.jsx';
 
 const WIDGET_COMPONENTS = {
   'widget-weather':   Weather,
@@ -37,6 +38,7 @@ const WIDGET_COMPONENTS = {
   'widget-discord':   Discord,
   'widget-analytics': Analytics,
   'widget-sessions':  Sessions,
+  'widget-monitor':   Monitor,
 };
 
 const TITLE_MAP = {
