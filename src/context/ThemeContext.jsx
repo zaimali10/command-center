@@ -8,7 +8,7 @@ const ThemeContext = createContext(null);
 function loadTheme() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return stored;
+    if (stored && THEME_CYCLE.includes(stored)) return stored;
   } catch {
     // fall through
   }

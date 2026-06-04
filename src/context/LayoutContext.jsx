@@ -19,7 +19,10 @@ const LayoutContext = createContext(null);
 function loadLayout() {
   try {
     const raw = localStorage.getItem('cc.layout.v1');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
   } catch {
     // fall through
   }
