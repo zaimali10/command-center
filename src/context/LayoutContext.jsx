@@ -32,7 +32,7 @@ export function LayoutProvider({ children }) {
   }
 
   function resetLayout() {
-    storage.clear();
+    storage.remove('layout');  // only reset layout positions, not all data
     setOrderState(DEFAULT_LAYOUT);
   }
 
