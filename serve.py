@@ -200,12 +200,16 @@ def _kill_process_on_port(port):
             capture_output=True, text=True, timeout=5
         )
         pids = result.stdout.strip().split('\n')
+        killed = False
         for pid in pids:
             pid = pid.strip()
-            if pid and pid.isdigit():
+            if pid and pid.isdigit() and int(pid) > 0:
                 subprocess.run(["taskkill", "/F", "/PID", pid],
                                capture_output=True, timeout=5)
                 print(f"[Command Center] Killed stale process on port {port} (PID {pid})")
+                killed = True
+        if not killed:
+            print(f"[Command Center] Port {port} is free.")
     except Exception:
         pass
 
@@ -306,4 +310,7 @@ if __name__ == "__main__":
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down.")
+    except Exception as e:
+        print(f"\n[Command Center] Server error: {e}")
+    finally:
         server.server_close()
