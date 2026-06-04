@@ -795,22 +795,31 @@ html[data-theme="midnight"] body {
 
 /* ── Touch device optimizations ───────────────────────────────── */
 @media (hover: none) and (pointer: coarse) {
-  /* Increase touch targets to 44px minimum */
+  /* Increase touch targets to 44px minimum for all interactive elements */
+  .tab-btn { min-height: 44px; }
   .mode-indicator { min-height: 44px; display: inline-flex; align-items: center; }
-  .todo-check { width: 44px; height: 44px; }
-  .grocery-check { width: 44px; height: 44px; }
+  .todo-check { width: 44px; height: 44px; border-radius: 8px; }
   .todo-del { min-width: 44px; min-height: 44px; }
+  .todo-input { min-height: 44px; }
+  .todo-add { min-height: 44px; min-width: 44px; }
+  .todo-item { min-height: 44px; }
+  .grocery-check { width: 44px; height: 44px; border-radius: 6px; }
   .grocery-del { min-width: 44px; min-height: 44px; }
-  .theme-btn { min-height: 44px; min-width: 44px; }
-  .kb-add { min-width: 44px; min-height: 44px; }
-  .kb-card-del { width: 44px; height: 44px; }
+  .grocery-input { min-height: 44px; }
+  .grocery-cat-select { min-height: 44px; }
+  .grocery-add { min-height: 44px; min-width: 44px; }
   .grocery-item { min-height: 44px; }
   .grocery-cat-head { min-height: 44px; display: flex; align-items: center; }
-
-  /* Add padding for better spacing on touch */
-  .todo-check { border-radius: 8px; }
-  .grocery-check { border-radius: 6px; }
-  .kb-card-del { display: flex; align-items: center; justify-content: center; }
+  .theme-btn { min-height: 44px; min-width: 44px; }
+  .kb-add { min-width: 44px; min-height: 44px; }
+  .kb-card-del { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+  .kb-field input,
+  .kb-field textarea { min-height: 44px; }
+  .kb-btn-ghost,
+  .kb-btn-primary { min-height: 44px; }
+  .wq-item { min-height: 44px; }
+  .discord-btn { min-height: 56px; }
+  .proj { min-height: 88px; }
 }
 
 .gh-events::-webkit-scrollbar, .todo-list::-webkit-scrollbar { width: 6px; }
