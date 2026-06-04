@@ -62,6 +62,7 @@ REM --- Apply firewall rules ---
 echo  🔧 Applying firewall rules...
 netsh advfirewall firewall add rule name="Hermes Dashboard 9119" dir=in action=allow protocol=TCP localport=9119 profile=private description="Allow Hermes Agent Dashboard from iPad on home WiFi" >nul 2>&1
 netsh advfirewall firewall add rule name="Command Center 8080" dir=in action=allow protocol=TCP localport=8080 profile=private description="Allow Command Center from iPad on home WiFi" >nul 2>&1
+netsh advfirewall firewall add rule name="Command Center 8082" dir=in action=allow protocol=TCP localport=8082 profile=private description="Allow Command Center fallback port" >nul 2>&1
 echo  ✓ Firewall rules added
 
 REM --- Clear stale bytecode cache ---

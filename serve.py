@@ -21,6 +21,50 @@ PORT = 8080
 HERE = Path(__file__).parent
 
 
+def ensure_react_build():
+    """Build the React app if dist/ doesn't exist or is stale."""
+    dist_dir = HERE / "dist"
+    needs_build = not dist_dir.is_dir()
+
+    if not needs_build:
+        # Check if any src/ files are newer than dist/
+        dist_index = dist_dir / "index.html"
+        if dist_index.exists():
+            dist_mtime = dist_index.stat().st_mtime
+            for src_file in (HERE / "src").rglob("*"):
+                if src_file.is_file() and src_file.stat().st_mtime > dist_mtime:
+                    needs_build = True
+                    break
+
+    if needs_build:
+        print("[Command Center] Building React app...")
+        npx_paths = [
+            str(Path(os.environ.get("ProgramFiles", "C:\\Program Files")) / "nodejs" / "npx.cmd"),
+            str(Path(os.environ.get("ProgramFiles(x86)", "C:\\Program Files (x86)")) / "nodejs" / "npx.cmd"),
+        ]
+        npx = None
+        for p in npx_paths:
+            if os.path.exists(p):
+                npx = p
+                break
+        if npx is None:
+            # Try PATH
+            import shutil
+            npx = shutil.which("npx.cmd") or shutil.which("npx")
+
+        if npx:
+            result = subprocess.run([npx, "run", "build"], cwd=str(HERE),
+                                    capture_output=True, text=True, timeout=120)
+            if result.returncode == 0:
+                print("[Command Center] React build complete.")
+            else:
+                print(f"[Command Center] React build failed: {result.stderr}")
+        else:
+            print("[Command Center] WARNING: npx not found. Run 'npm run build' manually.")
+    else:
+        print("[Command Center] React build is up to date.")
+
+
 # Extract session token from the Hermes dashboard
 _DASHBOARD_TOKEN = None
 
@@ -43,18 +87,34 @@ def _extract_token():
 
 class CommandCenterHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=str(HERE), **kwargs)
+        # Serve from dist/ (React production build) if it exists, otherwise cwd
+        dist_dir = HERE / "dist"
+        serve_dir = str(dist_dir) if dist_dir.is_dir() else str(HERE)
+        super().__init__(*args, directory=serve_dir, **kwargs)
 
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
 
-        # Proxy API calls to Hermes dashboard (NOT root — we serve root ourselves)
+        # Proxy API calls to Hermes dashboard
         if path.startswith("/api/") or path == "/health":
             self.proxy_to_hermes(path, parsed.query)
             return
 
-        # Serve static files from the command center directory (including index.html at /)
+        # Serve /data/* from project root (telemetry, etc.)
+        if path.startswith("/data/"):
+            file_path = HERE / path.lstrip("/")
+            if file_path.exists() and file_path.is_file():
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                with open(file_path, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+            # Fall through to 404 below if file doesn't exist
+
+        # Serve static files from the command center directory (or dist/)
         return super().do_GET()
 
     def proxy_to_hermes(self, path, query):
@@ -293,6 +353,9 @@ if __name__ == "__main__":
     if pycache.exists():
         import shutil
         shutil.rmtree(pycache, ignore_errors=True)
+
+    # Auto-build the React app if needed
+    ensure_react_build()
 
     print(f"🏗️  Command Center Server")
     print(f"   Hermes API:  {HERMES_API}")
