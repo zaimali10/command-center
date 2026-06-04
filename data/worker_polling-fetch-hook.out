@@ -1,0 +1,10 @@
+Based on my exploration, I can see this is a React dashboard app with several widgets that currently implement their own polling logic. Your detailed requirements are very clear, but I have one clarifying question to ensure the hook integrates well with the existing codebase:
+
+**What signature should the `transform` function have?** 
+
+Should it be:
+- A. `transform: (response) => transformedData` - receives the raw fetch response object
+- B. `transform: (data) => transformedData` - receives the already-parsed JSON data  
+- C. `transform: (response, previousData) => transformedData` - receives response + previous data for comparison
+
+I'm leaning toward option B since it's the most common pattern and would work well with the existing widgets like Weather and Github that already parse JSON and transform the data.

@@ -1,28 +1,21 @@
 {
   "queue": [
     {
-      "id": "polling-fetch-basic",
-      "label": "Create basic usePollingFetch hook (core polling only)",
-      "status": "waiting",
+      "id": "polling-fetch-hook",
+      "label": "Create full usePollingFetch hook with dedup, retry, and visibility",
+      "status": "done",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Create ~/Projects/command-center/src/hooks/usePollingFetch.js. Create the hooks directory if needed. This is a basic version - keep it simple. The hook: function usePollingFetch(url, interval, options={}) where options has transform and onError. Returns { data, error, isLoading, refetch }. Implementation: useEffect with setTimeout-based scheduling (NOT setInterval). Fetch the URL, parse JSON, apply transform if provided. On error, keep previous data value (do not clear it). Cleanup the timeout on unmount. Use an AbortController to abort in-flight requests on unmount. refetch is useCallback that cancels current timeout and triggers an immediate fetch. That's it - no retry, no visibility check. Keep the code under 80 lines. After creating the file, run `npm run build` from ~/Projects/command-center/ and verify zero errors."
+      "prompt": "Create ~/Projects/command-center/src/hooks/usePollingFetch.js. Create the hooks directory if needed. Full implementation: function usePollingFetch(url, interval, options={}) where options has { transform, retry: 2, onError, enabled: true, deps: [] }. Returns { data, error, isLoading, isRefreshing, lastUpdated, refetch }. Use useEffect with setTimeout-based scheduling (not setInterval). Use AbortController for deduplication. Skip fetch when document.hidden. Retry failed fetches up to 2 times with exponential backoff. Keep stale data on error. Auto-cleanup on unmount. refetch is a stable useCallback. After creating the file, run `npm run build` from ~/Projects/command-center/ and verify zero errors.",
+      "completed_at": "2026-06-04T14:28:04-0500"
     },
     {
-      "id": "polling-fetch-features",
-      "label": "Add dedup, retry, visibility check to usePollingFetch",
+      "id": "remove-weather-feature",
+      "label": "Remove Weather widget entirely (not needed)",
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Add three features to ~/Projects/command-center/src/hooks/usePollingFetch.js: (1) Request deduplication - if a fetch is already in-flight when a new tick fires, skip the new fetch. Use the existing AbortController ref to track in-flight state. (2) Automatic retry - retry failed fetches up to 2 times with exponential backoff (500ms * 2^n, capped at 5s). Only report error to the component after all retries exhausted. (3) Tab visibility - when document.hidden is true, skip the fetch. When tab becomes visible again, trigger an immediate fetch. Also add isRefreshing to the return value (true on subsequent fetches after the first load). Keep existing code working. After changes, run `npm run build` from ~/Projects/command-center/ and verify zero errors."
-    },
-    {
-      "id": "migrate-fetch-weather-monitor",
-      "label": "Migrate Weather.jsx and Monitor.jsx to usePollingFetch",
-      "status": "waiting",
-      "assigned_to": "claude",
-      "model": "claude-sonnet-4-20250514",
-      "prompt": "Migrate two components in ~/Projects/command-center/src/components/widgets/ to use usePollingFetch from src/hooks/usePollingFetch.js: (1) Weather.jsx - replace the manual fetch+setInterval+useEffect block (30s poll) with usePollingFetch. Keep existing display JSX and transform logic. (2) Monitor.jsx - replace the manual polling (30s poll) with usePollingFetch. Keep existing display JSX. Both should use the hook's returned { data, error, isLoading } for loading/error states. After both changes, run `npm run build` and verify zero errors."
+      "prompt": "Remove the Weather widget from the Command Center project at ~/Projects/command-center. (1) Delete src/components/widgets/Weather.jsx entirely. (2) In src/components/Dashboard.jsx, remove the line `import Weather from './widgets/Weather.jsx';` and remove the `'widget-weather': Weather,` entry from WIDGET_COMPONENTS, and remove the `'widget-weather': 'Weather \u00b7 Dallas',` entry from TITLE_MAP. (3) In src/styles.css, find and remove the entire CSS section that starts at `/* \u2500\u2500 Weather \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */` (including all rules under it until the next section). (4) After all changes, run `npm run build` from ~/Projects/command-center/ and verify zero errors. Do NOT modify any other files."
     },
     {
       "id": "migrate-fetch-workqueue-gateway",
@@ -38,7 +31,7 @@
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Create ~/Projects/command-center/src/registry.js. Read the spec at ~/Projects/command-center/refactor-spec.md section 4. Import all 14 widget components. Export WIDGETS array with { id, component, title, defaultPosition, defaultSize } for each. Export getComponents() and getTitles(). Widget ids must match existing keys in cc_layout localStorage. After creating the file, run `npm run build` and verify zero errors."
+      "prompt": "Create ~/Projects/command-center/src/registry.js. Read the spec at ~/Projects/command-center/refactor-spec.md section 4. Import all widget components. Since Weather.jsx was already deleted, do NOT include the Weather widget. Export WIDGETS array with { id, component, title, defaultPosition, defaultSize } for each remaining widget. Export getComponents() and getTitles(). Widget ids must match existing keys in cc_layout localStorage. After creating the file, run `npm run build` and verify zero errors."
     },
     {
       "id": "migrate-dashboard-registry-plus-error-boundary",
@@ -86,8 +79,8 @@
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-haiku-3-5-20241022",
-      "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) — see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
+      "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
     }
   ],
-  "last_updated": "2026-06-04T12:33:00-0500"
+  "last_updated": "2026-06-04T14:28:04-0500"
 }

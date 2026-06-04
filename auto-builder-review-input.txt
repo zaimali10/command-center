@@ -1,0 +1,30 @@
+Review the auto-builder script at ~/Projects/command-center/../AppData/Local/hermes/scripts/auto-builder.py. It's a no-agent cron job that runs every 15 minutes with a 120-second timeout. Its job is to run Claude Code tasks from a work queue.
+
+## The Core Problem
+The script spawns Claude Code as a subprocess and waits for it synchronously with a 110-second timeout. But Claude Code tasks (especially complex ones like rewriting Kanban with dnd-kit) can take 20-40 minutes of actual coding work. The cron scheduler kills the entire Python script at 120 seconds. The result: any task that takes Claude Code more than ~100 seconds gets killed mid-flight and retried on the next tick.
+
+Previous attempted fix: split tasks into smaller chunks that fit under 110s. This doesn't scale — some tasks are inherently complex and can't be broken down further without making each subtask incoherent.
+
+## What I Want You To Design
+A fundamentally different approach that decouples the cron tick's lifetime from Claude Code's work duration. The cron job should only be responsible for *scheduling* work and checking status, not for executing work synchronously.
+
+Consider:
+- The cron scheduler runs every 15 minutes and has a 120s timeout per tick
+- The auto-builder script runs as no_agent (= pure Python, no LLM cost)
+- Claude Code CLI is available at C:\Users\Zaim-Work\AppData\Roaming\npm\claude.cmd
+- Tasks are stored in ~/Projects/command-center/data/work-queue.json with { id, label, prompt, model, status }
+- Claude Code can run as a background process (via subprocess.Popen, not subprocess.run)
+- The script has access to temp files, the filesystem, and hermes CLI for cron management
+- Environment: Windows 10, git-bash, Python 3.11, Node.js available
+
+## Design Constraints
+1. A complex task should be able to run for hours without being killed
+2. The cron tick should complete within a few seconds (just checking status and maybe starting new work)
+3. If a Claude Code run crashes or is interrupted, the next tick should detect and retry
+4. Multiple ticks should not start multiple Claude Code processes for the same task
+5. The work queue item should be marked "in_progress" while Claude Code runs and "done" on success
+6. Build + verify + commit should happen after Claude Code completes (which may be many ticks later)
+7. Lock file should prevent conflicting operations
+
+## Deliverable
+Read the actual auto-builder.py file from disk, analyze it fully, then write a redesigned version or a detailed refactor plan to ~/Projects/command-center/auto-builder-redesign.md. Be specific about the async architecture, not abstract suggestions.
