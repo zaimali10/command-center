@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { usePollingFetch } from '../../hooks/usePollingFetch';
 
 function statusDot(s) {
   const cls = s === 'running' ? 'wq-dot wq-running' :
@@ -25,64 +26,43 @@ function shortTime(iso) {
 }
 
 export default function WorkQueue() {
-  const [queueData, setQueueData] = useState(null);
-  const [logLines, setLogLines] = useState([]);
-  const [cronData, setCronData] = useState(null);
-  const [qError, setQError] = useState(null);
-  const [lError, setLError] = useState(null);
-  const [cError, setCError] = useState(null);
+  // Poll work-queue.json every 10 seconds
+  const { data: queueData, error: queueError } = usePollingFetch(
+    '/data/work-queue.json',
+    10_000
+  );
 
-  // Poll work-queue.json
-  useEffect(() => {
-    let cancelled = false;
-    function poll() {
-      fetch('/data/work-queue.json?' + Date.now())
-        .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
-        .then(d => { if (!cancelled) { setQueueData(d); setQError(null); } })
-        .catch(e => { if (!cancelled) setQError(e.message); });
+  // Poll auto-builder.log every 10 seconds
+  const { data: logData, error: logError } = usePollingFetch(
+    '/data/auto-builder.log',
+    10_000,
+    {
+      responseType: 'text',
+      transform: (text) => {
+        const lines = text.trim().split('\n').filter(Boolean);
+        return lines.slice(-15);
+      }
     }
-    poll();
-    const t = setInterval(poll, 10_000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, []);
+  );
 
-  // Poll auto-builder.log
-  useEffect(() => {
-    let cancelled = false;
-    function pollLog() {
-      fetch('/data/auto-builder.log?' + Date.now())
-        .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.text(); })
-        .then(text => {
-          if (cancelled) return;
-          const lines = text.trim().split('\n').filter(Boolean);
-          setLogLines(lines.slice(-15));
-          setLError(null);
-        })
-        .catch(e => { if (!cancelled) setLError(e.message); });
+  // Poll cron jobs every 30 seconds
+  const { data: cronJobs, error: cronError } = usePollingFetch(
+    '/api/cron/jobs',
+    30_000,
+    {
+      transform: (jobs) => {
+        const builder = Array.isArray(jobs) ? jobs.find(j => j.name === 'auto-command-center-builder') : null;
+        return builder || null;
+      }
     }
-    pollLog();
-    const t = setInterval(pollLog, 10_000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, []);
+  );
 
-  // Poll cron jobs
-  useEffect(() => {
-    let cancelled = false;
-    function pollCron() {
-      fetch('/api/cron/jobs')
-        .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
-        .then(jobs => {
-          if (cancelled) return;
-          const builder = Array.isArray(jobs) ? jobs.find(j => j.name === 'auto-command-center-builder') : null;
-          setCronData(builder || null);
-          setCError(null);
-        })
-        .catch(e => { if (!cancelled) setCError(e.message); });
-    }
-    pollCron();
-    const t = setInterval(pollCron, 30_000);
-    return () => { cancelled = true; clearInterval(t); };
-  }, []);
+  // Extract data for backward compatibility
+  const logLines = logData || [];
+  const cronData = cronJobs;
+  const qError = queueError?.message || null;
+  const lError = logError?.message || null;
+  const cError = cronError?.message || null;
 
   const sortedQueue = queueData?.queue
     ? [...queueData.queue].sort((a, b) => {

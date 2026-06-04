@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { usePollingFetch } from '../../hooks/usePollingFetch';
 
 function StatusRow({ label, dotColor, text }) {
   return (
@@ -13,25 +14,7 @@ function StatusRow({ label, dotColor, text }) {
 }
 
 export default function System() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchStatus() {
-      try {
-        const res = await fetch('/api/status');
-        if (!res.ok) throw new Error(String(res.status));
-        const json = await res.json();
-        if (!cancelled) setData(json);
-      } catch (e) {
-        if (!cancelled) setError(e.message);
-      }
-    }
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 30000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  const { data, error } = usePollingFetch('/api/status', 30_000);
 
   if (error || !data) {
     return (

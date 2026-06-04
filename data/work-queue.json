@@ -21,7 +21,7 @@
     {
       "id": "migrate-fetch-workqueue-gateway",
       "label": "Migrate WorkQueue.jsx and GatewayStatus.jsx to usePollingFetch",
-      "status": "waiting",
+      "status": "in_progress",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
       "prompt": "Migrate two components in ~/Projects/command-center/src/components/widgets/ to use usePollingFetch from src/hooks/usePollingFetch.js: (1) WorkQueue.jsx - replace the 3 separate polling useEffects (queue every 10s, log every 10s, cron every 30s) with 3 usePollingFetch calls. Keep the existing rendering and sorting logic. (2) GatewayStatus.jsx - replace manual polling with usePollingFetch at 30s interval. Keep existing display JSX. After both changes, run `npm run build` and verify zero errors."
@@ -83,5 +83,5 @@
       "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
     }
   ],
-  "last_updated": "2026-06-04T14:58:20-0500"
+  "last_updated": "2026-06-04T15:13:24-0500"
 }
