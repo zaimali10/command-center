@@ -1,0 +1,8 @@
+{
+  "queue": [
+    { "id": "monitor-sparklines", "label": "Per-core CPU sparklines for Monitor widget", "status": "waiting", "assigned_to": "claude" },
+    { "id": "ipad-polish", "label": "iPad-optimized touch targets and layout", "status": "waiting", "assigned_to": "claude" },
+    { "id": "esp32-firmware", "label": "ESP32-S3 voice node firmware flash", "status": "waiting", "assigned_to": "jarvis" }
+  ],
+  "last_updated": "2026-06-04T09:30:00-05:00"
+}

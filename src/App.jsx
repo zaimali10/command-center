@@ -7,9 +7,10 @@ import Dashboard from './components/Dashboard.jsx';
 import Todo from './components/widgets/Todo.jsx';
 import Kanban from './components/widgets/Kanban.jsx';
 import Grocery from './components/widgets/Grocery.jsx';
+import WorkQueue from './components/widgets/WorkQueue.jsx';
 
 const TAB_STORAGE_KEY = 'cc.tab.v1';
-const VALID_TABS = ['dashboard', 'todo', 'kanban', 'grocery'];
+const VALID_TABS = ['dashboard', 'todo', 'kanban', 'workqueue', 'grocery'];
 
 function loadTab() {
   try {
@@ -109,6 +110,12 @@ function AppInner() {
           Kanban
         </button>
         <button
+          className={`tab-btn ${activeTab === 'workqueue' ? 'active' : ''}`}
+          onClick={() => handleSetTab('workqueue')}
+        >
+          Queue
+        </button>
+        <button
           className={`tab-btn ${activeTab === 'grocery' ? 'active' : ''}`}
           onClick={() => handleSetTab('grocery')}
         >
@@ -129,6 +136,10 @@ function AppInner() {
 
       <div id="kanban-tab" className={`tab-panel ${activeTab === 'kanban' ? 'active' : ''}`}>
         <Kanban />
+      </div>
+
+      <div id="workqueue-tab" className={`tab-panel ${activeTab === 'workqueue' ? 'active' : ''}`}>
+        <WorkQueue />
       </div>
 
       <div id="grocery-tab" className={`tab-panel ${activeTab === 'grocery' ? 'active' : ''}`}>
