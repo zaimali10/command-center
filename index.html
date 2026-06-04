@@ -134,9 +134,29 @@
       letter-spacing: 2px;
       color: var(--accent);
       opacity: 0.85;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .card .empty { color: var(--fg-dim); font-size: 14px; }
     /* .span-2 / .span-full removed in Phase 1 — now using data-span attributes */
+    .card.cc-dragging { opacity: 0.3; }
+    .cc-ghost {
+      position: fixed; pointer-events: none; z-index: 200;
+      border-radius: var(--radius);
+      background: rgba(0,255,208,0.06);
+      border: 2px solid var(--accent);
+      box-shadow: 0 12px 48px rgba(0,255,208,0.30);
+      backdrop-filter: blur(20px) saturate(140%);
+      width: 300px;
+      transform: rotate(1deg) scale(1.02);
+    }
+    .cc-drop-indicator {
+      height: 4px; border-radius: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+      width: 100%;
+    }
 
     /* ── To-Do tab (roomier) ──────────────────────────────────────── */
     #todo-tab {

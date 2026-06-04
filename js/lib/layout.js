@@ -2,7 +2,7 @@
  * Layout – data-driven widget grid.
  *
  * Phase 1: data-driven ordering + responsive column count.
- * No drag yet — that's Phase 2.
+ * Phase 2: drag-to-reorder with localStorage persistence.
  *
  * Design:
  *  - Layout is data stored in localStorage under "cc.layout.v1".
@@ -134,6 +134,111 @@ function resetLayout() {
   location.reload();
 }
 
+/**
+ * Compute the insertion index for a drop at (x, y).
+ * Excludes the dragged card and any drop indicator from the comparison set.
+ * Returns the index to insert before in that filtered list.
+ */
+function getDropIndex(dashboardEl, draggingEl, x, y) {
+  const cards = [...dashboardEl.children].filter(
+    el => el !== draggingEl && !el.classList.contains('cc-drop-indicator')
+  );
+  for (let i = 0; i < cards.length; i++) {
+    const rect = cards[i].getBoundingClientRect();
+    if (y < rect.top + rect.height / 2) return i;
+  }
+  return cards.length;
+}
+
+/**
+ * Bind pointer-based drag-to-reorder on dashboardEl.
+ * Drag starts after 100 px of cumulative pointer movement from a .card h2.
+ * Persists new order on drop via saveLayout().
+ */
+function bindDrag(dashboardEl) {
+  dashboardEl.addEventListener('pointerdown', e => {
+    const h2 = e.target.closest('h2');
+    if (!h2) return;
+    const card = h2.closest('.card');
+    if (!card || card.parentElement !== dashboardEl) return;
+
+    let ghost     = null;
+    let indicator = null;
+    let dragStarted = false;
+    let dropIdx   = -1;
+    const startX  = e.clientX;
+    const startY  = e.clientY;
+
+    card.setPointerCapture(e.pointerId);
+    e.preventDefault();
+
+    function onMove(ev) {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+
+      if (!dragStarted) {
+        if (dx * dx + dy * dy < 10000) return;   // threshold: 100 px
+        dragStarted = true;
+
+        ghost = card.cloneNode(true);
+        ghost.classList.add('cc-ghost');
+        document.body.appendChild(ghost);
+
+        indicator = document.createElement('div');
+        indicator.classList.add('cc-drop-indicator');
+
+        card.classList.add('cc-dragging');
+      }
+
+      ghost.style.left = `${ev.clientX - 150}px`;
+      ghost.style.top  = `${ev.clientY - 30}px`;
+
+      dropIdx = getDropIndex(dashboardEl, card, ev.clientX, ev.clientY);
+
+      const siblings = [...dashboardEl.children].filter(
+        el => el !== card && !el.classList.contains('cc-drop-indicator')
+      );
+      if (dropIdx >= siblings.length) {
+        dashboardEl.appendChild(indicator);
+      } else {
+        dashboardEl.insertBefore(indicator, siblings[dropIdx]);
+      }
+    }
+
+    function end() {
+      if (dragStarted) {
+        if (dropIdx >= 0) {
+          const siblings = [...dashboardEl.children].filter(
+            el => el !== card && !el.classList.contains('cc-drop-indicator')
+          );
+          if (dropIdx >= siblings.length) {
+            dashboardEl.appendChild(card);
+          } else {
+            dashboardEl.insertBefore(card, siblings[dropIdx]);
+          }
+        }
+
+        const layout = [...dashboardEl.querySelectorAll(':scope > .card')].map(el => {
+          const sp = el.dataset.span;
+          return { id: el.id, span: sp === 'full' ? 'full' : (parseInt(sp, 10) || 1) };
+        });
+        saveLayout(layout);
+      }
+
+      if (ghost)     { ghost.remove();     ghost = null; }
+      if (indicator) { indicator.remove(); indicator = null; }
+      card.classList.remove('cc-dragging');
+      card.removeEventListener('pointermove',   onMove);
+      card.removeEventListener('pointerup',     end);
+      card.removeEventListener('pointercancel', end);
+    }
+
+    card.addEventListener('pointermove',   onMove);
+    card.addEventListener('pointerup',     end);
+    card.addEventListener('pointercancel', end);
+  });
+}
+
 export {
   DEFAULT_LAYOUT,
   loadLayout,
@@ -142,4 +247,5 @@ export {
   currentCols,
   watchResize,
   resetLayout,
+  bindDrag,
 };

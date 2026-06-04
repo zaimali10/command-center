@@ -1,6 +1,6 @@
 import { API }      from './lib/api.js';
 import { CONFIG }   from './lib/config.js';
-import { applyLayout, loadLayout, watchResize, resetLayout } from './lib/layout.js';
+import { applyLayout, loadLayout, watchResize, resetLayout, bindDrag } from './lib/layout.js';
 import { mountClock }     from './widgets/clock.js';
 import { mountQuote }     from './widgets/quote.js';
 import { mountWeather }   from './widgets/weather.js';
@@ -79,6 +79,9 @@ function setupTabs() {
 
   // Watch container resize — auto-adjusts --cols on iPad/screen resize
   watchResize();
+
+  // Phase 2: drag-to-reorder
+  bindDrag(document.getElementById('dashboard'));
 
   // Wire reset layout button
   document.getElementById('reset-layout-btn')?.addEventListener('click', resetLayout);
