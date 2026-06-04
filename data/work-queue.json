@@ -3,10 +3,11 @@
     {
       "id": "storage-service",
       "label": "Create centralized storage service with schema versioning and migrations",
-      "status": "waiting",
+      "status": "done",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 3 (Storage Service). Implement it exactly as described. Create src/services/storage.js with the full API (get, set, remove, clear, keys), cc_ prefix, schema versioning with runMigrations(), corrup data handling, and fallback for private browsing mode. Then migrate ALL consumers: LayoutContext.jsx, Kanban.jsx, Todo.jsx, Grocery.jsx, and ThemeContext.jsx. Also call runMigrations() from src/main.jsx before ReactDOM.createRoot. After all changes, run `npm run build` and verify zero errors."
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 3 (Storage Service). Implement it exactly as described. Create src/services/storage.js with the full API (get, set, remove, clear, keys), cc_ prefix, schema versioning with runMigrations(), corrup data handling, and fallback for private browsing mode. Then migrate ALL consumers: LayoutContext.jsx, Kanban.jsx, Todo.jsx, Grocery.jsx, and ThemeContext.jsx. Also call runMigrations() from src/main.jsx before ReactDOM.createRoot. After all changes, run `npm run build` and verify zero errors.",
+      "completed_at": "2026-06-04T11:41:53-0500"
     },
     {
       "id": "polling-fetch-hook",
@@ -73,5 +74,5 @@
       "prompt": "Read ~/Projects/command-center/refactor-spec.md section 6.4 (Light theme). In src/styles.css: add [data-theme='light'] block with white bg (page #f7f7f8, cards #ffffff), dark text (#1a1a1f primary, #4a4a52 secondary), subtle borders (#e3e3e8), subtle shadows, and proper accent contrast. Define all theme variables so nothing is left unset. In ThemeContext.jsx: add 'light' to the theme toggle cycle (dark -> midnight -> light -> dark). Persist via storage service. After changes, run `npm run build` and verify zero errors."
     }
   ],
-  "last_updated": "2026-06-04T00:00:00-0500"
+  "last_updated": "2026-06-04T11:41:53-0500"
 }

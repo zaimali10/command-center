@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { storage } from '../services/storage.js';
 
 export const DEFAULT_LAYOUT = [
   { id: 'widget-weather',   span: 1 },
@@ -17,15 +18,8 @@ export const DEFAULT_LAYOUT = [
 const LayoutContext = createContext(null);
 
 function loadLayout() {
-  try {
-    const raw = localStorage.getItem('cc.layout.v1');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch {
-    // fall through
-  }
+  const layout = storage.get('layout', DEFAULT_LAYOUT);
+  if (Array.isArray(layout) && layout.length > 0) return layout;
   return DEFAULT_LAYOUT;
 }
 
@@ -34,12 +28,12 @@ export function LayoutProvider({ children }) {
 
   function setOrder(newOrder) {
     setOrderState(newOrder);
-    localStorage.setItem('cc.layout.v1', JSON.stringify(newOrder));
+    storage.set('layout', newOrder);
   }
 
   function resetLayout() {
-    localStorage.removeItem('cc.layout.v1');
-    window.location.reload();
+    storage.clear();
+    setOrderState(DEFAULT_LAYOUT);
   }
 
   return (

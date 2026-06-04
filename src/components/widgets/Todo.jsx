@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-
-const STORAGE_KEY = 'cc.todos.v1';
+import { storage } from '../../services/storage.js';
 
 function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
+  return storage.get('todos', []);
 }
-function save(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+function save(items) {
+  storage.set('todos', items);
+}
 
 export default function Todo() {
   const [items, setItems] = useState(load);

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
+import { storage } from '../../services/storage.js';
 
 const CATEGORIES = [
   'Produce', 'Dairy & Eggs', 'Meat & Seafood', 'Pantry',
   'Frozen', 'Bakery', 'Beverages', 'Other',
 ];
 
-const STORAGE_KEY = 'cc.grocery.v1';
-
 function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
+  return storage.get('grocery_items', []);
 }
-function save(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+function save(items) {
+  storage.set('grocery_items', items);
+}
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);

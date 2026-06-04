@@ -1,17 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { storage } from '../services/storage.js';
 
 const THEME_CYCLE = ['dark', 'light', 'midnight'];
-const STORAGE_KEY = 'cc.theme.v1';
 
 const ThemeContext = createContext(null);
 
 function loadTheme() {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && THEME_CYCLE.includes(stored)) return stored;
-  } catch {
-    // fall through
-  }
+  const stored = storage.get('theme', 'dark');
+  if (THEME_CYCLE.includes(stored)) return stored;
   return 'dark';
 }
 
@@ -20,7 +16,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem(STORAGE_KEY, theme);
+    storage.set('theme', theme);
   }, [theme]);
 
   function toggleTheme() {
