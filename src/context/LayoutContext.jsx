@@ -27,20 +27,15 @@ function loadLayout() {
 }
 
 export function LayoutProvider({ children }) {
-  const [order, setOrder] = useState(loadLayout);
+  const [widgets, setWidgetsState] = useState(loadLayout);
 
-  function saveOrder(newOrder) {
-    setOrder(newOrder);
-    localStorage.setItem('cc.layout.v1', JSON.stringify(newOrder));
-  }
-
-  function resetLayout() {
-    localStorage.removeItem('cc.layout.v1');
-    setOrder(DEFAULT_LAYOUT);
+  function setWidgets(newWidgets) {
+    setWidgetsState(newWidgets);
+    localStorage.setItem('cc.layout.v1', JSON.stringify(newWidgets));
   }
 
   return (
-    <LayoutContext.Provider value={{ order, saveOrder, resetLayout }}>
+    <LayoutContext.Provider value={{ widgets, setWidgets }}>
       {children}
     </LayoutContext.Provider>
   );
