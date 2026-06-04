@@ -30,10 +30,11 @@
     {
       "id": "widget-registry",
       "label": "Create widget registry file",
-      "status": "waiting",
+      "status": "done",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Create ~/Projects/command-center/src/registry.js. Read the spec at ~/Projects/command-center/refactor-spec.md section 4. Import all widget components. Since Weather.jsx was already deleted, do NOT include the Weather widget. Export WIDGETS array with { id, component, title, defaultPosition, defaultSize } for each remaining widget. Export getComponents() and getTitles(). Widget ids must match existing keys in cc_layout localStorage. After creating the file, run `npm run build` and verify zero errors."
+      "prompt": "Create ~/Projects/command-center/src/registry.js. Read the spec at ~/Projects/command-center/refactor-spec.md section 4. Import all widget components. Since Weather.jsx was already deleted, do NOT include the Weather widget. Export WIDGETS array with { id, component, title, defaultPosition, defaultSize } for each remaining widget. Export getComponents() and getTitles(). Widget ids must match existing keys in cc_layout localStorage. After creating the file, run `npm run build` and verify zero errors.",
+      "completed_at": "2026-06-04T15:58:47-0500"
     },
     {
       "id": "migrate-dashboard-registry-plus-error-boundary",
@@ -84,5 +85,5 @@
       "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
     }
   ],
-  "last_updated": "2026-06-04T15:28:33-0500"
+  "last_updated": "2026-06-04T15:58:47-0500"
 }
