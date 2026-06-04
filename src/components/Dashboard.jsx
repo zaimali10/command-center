@@ -15,6 +15,19 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useLayout } from '../context/LayoutContext.jsx';
+import Weather from './widgets/Weather.jsx';
+import Forecast from './widgets/Forecast.jsx';
+import System from './widgets/System.jsx';
+import Skills from './widgets/Skills.jsx';
+import Cron from './widgets/Cron.jsx';
+
+const WIDGET_COMPONENTS = {
+  'widget-weather':  Weather,
+  'widget-forecast': Forecast,
+  'widget-system':   System,
+  'widget-skills':   Skills,
+  'widget-cron':     Cron,
+};
 
 const TITLE_MAP = {
   'widget-weather':   'Weather · Dallas',
@@ -30,7 +43,7 @@ const TITLE_MAP = {
   'widget-sessions':  'Recent Sessions',
 };
 
-function SortableCard({ id, span, children }) {
+function SortableCard({ id, span }) {
   const {
     attributes,
     listeners,
@@ -52,6 +65,7 @@ function SortableCard({ id, span, children }) {
   };
 
   const title = TITLE_MAP[id] || id;
+  const WidgetComponent = WIDGET_COMPONENTS[id] || null;
 
   return (
     <section
@@ -61,8 +75,7 @@ function SortableCard({ id, span, children }) {
       data-span={span}
     >
       <h2 {...attributes} {...listeners}>{title}</h2>
-      <p className="empty">widget placeholder</p>
-      {children}
+      {WidgetComponent ? <WidgetComponent /> : <p className="empty">widget placeholder</p>}
     </section>
   );
 }
