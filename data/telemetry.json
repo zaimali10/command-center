@@ -1,0 +1,43 @@
+{
+  "timestamp": 1780532012.7914944,
+  "time_iso": "2026-06-03T19:13:32-0500",
+  "cpu": {
+    "percent": 6.6,
+    "per_core": [
+      0.0,
+      0.0,
+      0.0,
+      14.3,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "count_logical": 12,
+    "count_physical": 6
+  },
+  "memory": {
+    "percent": 50.0,
+    "used_gb": 8.6,
+    "total_gb": 17.1,
+    "available_gb": 8.5
+  },
+  "disk": {
+    "percent": 8.8,
+    "used_gb": 88.0,
+    "total_gb": 999.1,
+    "free_gb": 911.1
+  },
+  "system": {
+    "hostname": "Zaim-Laptop",
+    "platform": "win32",
+    "uptime_seconds": 103284,
+    "uptime": "1d 4h 41m",
+    "boot_time": "2026-06-02T14:32:08-0500",
+    "process_count": 236
+  }
+}

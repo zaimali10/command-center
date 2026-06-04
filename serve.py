@@ -210,6 +210,40 @@ def _kill_process_on_port(port):
         pass
 
 
+def start_telemetry():
+    """Start the system telemetry daemon in background if not already running."""
+    telemetry_py = HERE / "telemetry.py"
+    if not telemetry_py.exists():
+        print("[Command Center] telemetry.py not found, skipping.")
+        return False
+    # Check if already running (by pidfile or simple process scan)
+    pidfile = HERE / "data" / "telemetry.pid"
+    if pidfile.exists():
+        try:
+            old_pid = int(pidfile.read_text().strip())
+            import signal
+            os.kill(old_pid, 0)  # Still alive?
+            print(f"[Command Center] Telemetry daemon already running (PID {old_pid}).")
+            return True
+        except (OSError, ValueError):
+            pidfile.unlink(missing_ok=True)
+
+    print("[Command Center] Starting telemetry daemon...")
+    try:
+        proc = subprocess.Popen(
+            [sys.executable, str(telemetry_py)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        )
+        pidfile.parent.mkdir(parents=True, exist_ok=True)
+        pidfile.write_text(str(proc.pid))
+        print(f"[Command Center] Telemetry daemon started (PID {proc.pid}).")
+        return True
+    except Exception as e:
+        print(f"[Command Center] WARNING: Could not start telemetry: {e}")
+        return False
+
 if __name__ == "__main__":
     print(f"🏗️  Command Center Server")
     print(f"   Hermes API:  {HERMES_API}")
@@ -219,6 +253,9 @@ if __name__ == "__main__":
 
     # Check/start Hermes dashboard
     ensure_dashboard_running()
+
+    # Start system telemetry daemon
+    start_telemetry()
 
     # Start Claude remote-control for phone access
     start_claude_remote_control()

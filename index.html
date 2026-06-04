@@ -502,6 +502,112 @@
     }
     .kb-btn-primary:active { transform: scale(0.97); background: rgba(0,255,208,0.30); }
 
+    /* ── Kanban drag-and-drop ─────────────────────────────────────── */
+    .kb-dragging { opacity: 0.3; transform: scale(0.95); }
+    .kb-ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 200;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(0, 255, 208, 0.08);
+      border: 2px solid var(--accent);
+      box-shadow: 0 12px 48px rgba(0, 255, 208, 0.30), 0 0 60px rgba(0, 255, 208, 0.10);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      transform: rotate(2deg) scale(1.02);
+      cursor: grabbing;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .kb-ghost .kb-card-del { display: none; }
+    .kb-drop-indicator {
+      height: 4px;
+      margin: -2px 0;
+      border-radius: 2px;
+      transition: height 120ms ease, opacity 120ms ease;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .kb-drop-indicator.kb-drop-highlight {
+      height: 4px;
+      opacity: 1;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+    .kb-col-body.kb-drop-active {
+      background: rgba(0, 255, 208, 0.03);
+      border-radius: 12px;
+    }
+
+    /* ── Theme toggle button ───────────────────────────────────────── */
+    .theme-btn {
+      background: none; border: none; cursor: pointer;
+      padding: 8px 12px; border-radius: 10px;
+      color: var(--fg-dim);
+      font-size: 18px;
+      transition: color 120ms ease, background 120ms ease;
+      margin-left: auto;
+    }
+    .theme-btn:hover { color: var(--fg); background: var(--glass-bg); }
+    .theme-btn:active { transform: scale(0.94); }
+
+    /* ── Forecast card ─────────────────────────────────────────────── */
+    .fc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .fc-day {
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--glass-br);
+      text-align: center;
+    }
+    .fc-name { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--fg-dim); }
+    .fc-icon { font-size: 28px; margin: 4px 0; }
+    .fc-temps { font-family: var(--font-mono); font-size: 14px; }
+    .fc-high { color: var(--accent); }
+    .fc-low  { color: var(--fg-dim); }
+    .fc-rain { font-size: 11px; color: var(--accent-2); margin-top: 4px; }
+
+    /* ── Theme: Glass Light ─────────────────────────────────────────── */
+    html[data-theme="light"] {
+      --bg:        #f4f7fc;
+      --bg-2:      #e8edf5;
+      --fg:        #0a1628;
+      --fg-dim:    #5a6a80;
+      --accent:    #00b894;
+      --accent-2:  #0984e3;
+      --danger:    #d63031;
+      --warn:      #fdcb6e;
+      --glass-bg:  rgba(255, 255, 255, 0.7);
+      --glass-br:  rgba(0, 0, 0, 0.08);
+    }
+    html[data-theme="light"] body {
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(0, 255, 208, 0.04), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(9, 132, 227, 0.03), transparent 60%),
+        var(--bg);
+    }
+
+    /* ── Theme: Midnight ────────────────────────────────────────────── */
+    html[data-theme="midnight"] {
+      --bg:        #050a18;
+      --bg-2:      #0a1028;
+      --fg:        #c8d6e5;
+      --fg-dim:    #576c85;
+      --accent:    #48dbfb;
+      --accent-2:  #a29bfe;
+      --danger:    #ff6b6b;
+      --warn:      #feca57;
+      --glass-bg:  rgba(255, 255, 255, 0.02);
+      --glass-br:  rgba(255, 255, 255, 0.05);
+    }
+    html[data-theme="midnight"] body {
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(72, 219, 251, 0.05), transparent 60%),
+        radial-gradient(900px 500px at 110% 10%, rgba(162, 155, 254, 0.03), transparent 60%),
+        var(--bg);
+    }
+
     /* ── Responsive ───────────────────────────────────────────────── */
     @media (max-width: 1000px) {
       main#dashboard { grid-template-columns: repeat(2, 1fr); }
@@ -536,7 +642,10 @@
   <header>
     <div id="clock">00:00:00</div>
     <div id="date">— — —</div>
-    <div id="mode-indicator" class="mode-indicator">checking...</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="theme-btn" id="theme-btn" aria-label="toggle theme">🌓</button>
+      <span id="mode-indicator" class="mode-indicator">checking...</span>
+    </div>
   </header>
 
   <nav class="tabs" role="tablist" aria-label="Sections">
@@ -548,6 +657,7 @@
   <!-- Dashboard tab -->
   <main id="dashboard" class="tab-panel" data-tab="dashboard" role="tabpanel">
     <section class="card" id="widget-weather"><h2>Weather · Dallas</h2><div class="empty">loading…</div></section>
+    <section class="card" id="widget-forecast"><h2>3-Day Forecast</h2><div class="empty">loading…</div></section>
     <section class="card" id="widget-system"><h2>System</h2><div class="empty">—</div></section>
     <section class="card" id="widget-skills"><h2>Skills</h2><div class="empty">—</div></section>
 

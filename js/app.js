@@ -3,6 +3,8 @@ import { CONFIG }   from './lib/config.js';
 import { mountClock }     from './widgets/clock.js';
 import { mountQuote }     from './widgets/quote.js';
 import { mountWeather }   from './widgets/weather.js';
+import { mountForecast }  from './widgets/forecast.js';
+import { mountTheme }     from './widgets/theme.js';
 import { mountSystem,    refreshSystem    } from './widgets/system.js';
 import { mountTodo }      from './widgets/todo.js';
 import { mountGithub }    from './widgets/github.js';
@@ -52,9 +54,11 @@ function setupTabs() {
 
   setupTabs();
 
+  mountTheme();
   mountClock();
   mountQuote();
   mountWeather();
+  mountForecast();
   mountGithub();
   mountProjects();
   mountDiscord();
