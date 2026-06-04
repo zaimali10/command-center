@@ -1,0 +1,70 @@
+Write a detailed implementation specification file at ~/Projects/command-center/refactor-spec.md for the following 6 refactors to a React + Vite + dnd-kit dashboard. Output format per item: (1) File path and exports, (2) Function signatures/interfaces, (3) Key implementation details, (4) Edge cases, (5) Migration steps.
+
+## Project Context
+- 14 widget components across 5 tabs (Dashboard, To-Do, Kanban, Grocery, Queue)
+- Custom 435-line drag system in Kanban.jsx (manual pointer events)
+- Manual fetch + useEffect + setInterval polling in 8+ components
+- Hardcoded WIDGET_COMPONENTS and TITLE_MAP in Dashboard.jsx
+- localStorage accessed directly in 5+ components
+- No error boundaries (any widget crash kills the dashboard)
+- 1000+ line single styles.css
+- Themes: dark, midnight, light (light has no distinct colors)
+
+## 1. usePollingFetch Hook
+Create src/hooks/usePollingFetch.js.
+Accepts: url (string), interval (ms), options = { transform, retry: 2, onError, enabled: true, deps: [] }
+Returns: { data, error, isLoading, isRefreshing, lastUpdated, refetch }
+- Auto-fetch on mount, re-fetch on interval, auto-cleanup on unmount
+- Skip fetch when document.hidden (tab not visible)
+- Deduplicate: skip new fetch if previous still in-flight
+- On error: keep stale data, set error state (don't wipe valid data)
+- isLoading = true only on first fetch; isRefreshing = true on subsequent
+Migrate: Weather.jsx (30s), Monitor.jsx (30s), WorkQueue.jsx (3 polls), GatewayStatus.jsx
+
+## 2. Kanban Migration to dnd-kit
+Replace custom drag code in src/components/widgets/Kanban.jsx.
+Remove: onPointerDown/Move/Up, getDropTarget, getBoundingClientRect, querySelector, activeDrag state, keyboard shortcuts (e, E, Delete, Enter)
+Add: @dnd-kit/core (DndContext, useDroppable, useDraggable, DragOverlay), @dnd-kit/sortable (SortableContext, useSortable, arrayMove, verticalListSortingStrategy)
+- Each column = useDroppable. Each card = useSortable.
+- DragOverlay shows semi-transparent clone
+- On drag end: detect source/target column. Same column = arrayMove. Different = splice+add.
+- Keep existing data structures (id, created, order, column, title, description, tags, due)
+- Keep existing CardEditor modal form
+- Keep existing columns config
+- Keep localStorage persistence (target: future storage service)
+- Touch support via PointerSensor + TouchSensor
+
+## 3. Storage Service
+Create src/services/storage.js.
+Exports: { storage } with methods:
+- get(key, default) - read cc_prefixed key, JSON.parse, error handling (corrupt -> warn + return default)
+- set(key, value) - JSON.stringify + write with cc_ prefix
+- remove(key) - remove cc_prefixed key
+- clear() - remove all cc_prefixed keys
+Schema versioning: cc_schema_version key, migration functions array, runs on version mismatch.
+Migrate: LayoutContext.jsx, Kanban.jsx, Todo.jsx, Grocery.jsx, ThemeContext.jsx
+
+## 4. Widget Registry
+Create src/registry.js.
+Export WIDGETS = [{ id, component, title, defaultPosition, defaultSize }] (all 14 widgets)
+Export getComponents() -> { [id]: component }
+Export getTitles() -> { [id]: title }
+Import in Dashboard.jsx replacing hardcoded WIDGET_COMPONENTS and TITLE_MAP.
+Backward compatible with existing localStorage layout data format.
+
+## 5. Error Boundaries
+Create src/components/ErrorBoundary.jsx (class component - required for error boundaries).
+Props: name (string), children
+State: { hasError: false, error: null }
+- static getDerivedStateFromError(error) -> { hasError: true, error }
+- componentDidCatch(error, info) -> console.error(name, error, info)
+- Render: if error, show card with widget name + error message + Retry button (setState hasError=false)
+Wrap each widget in Dashboard.jsx: <ErrorBoundary name={title}><Widget.../></ErrorBoundary>
+
+## 6. Smaller Fixes
+- Clock (App.jsx): move day/month arrays to module level, 60s interval for date, 1s for seconds
+- resetLayout (LayoutContext.jsx): clear cc_ localStorage keys + reset local state. No location.reload()
+- CSS (styles.css): add section comments (THEME, LAYOUT, WIDGETS, RESPONSIVE), move :root vars to top
+- Light theme (styles.css + ThemeContext.jsx): [data-theme="light"] with white bg, dark text, subtle shadows. Add to theme toggle cycle.
+
+Write the file directly to ~/Projects/command-center/refactor-spec.md. Overwrite if it already exists.

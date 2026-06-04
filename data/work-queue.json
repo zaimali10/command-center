@@ -1,20 +1,12 @@
 {
   "queue": [
     {
-      "id": "clock-optimization",
-      "label": "Optimize clock: memoize day/month arrays, skip re-render unless minute changes",
+      "id": "storage-service",
+      "label": "Create centralized storage service with schema versioning and migrations",
       "status": "waiting",
       "assigned_to": "claude",
-      "model": "claude-haiku-3-5-20241022",
-      "prompt": "In ~/Projects/command-center/src/App.jsx, optimize the clock/date display. Two changes: (1) Move the day-name array ['Sunday','Monday',...] and month-name array ['January','February',...] outside the component as module-level constants so they're not recreated every render. (2) Split the timer: use a 60-second interval for date-only updates (which won't change for minutes at a time), and keep a 1-second interval only for the seconds display. The date display only needs to update when the minute ticks over. Keep the existing UI unchanged - this is purely a performance refactor. After changes, run `npm run build` and verify zero errors."
-    },
-    {
-      "id": "fix-reset-layout",
-      "label": "Fix resetLayout: clear localStorage + reset state instead of location.reload()",
-      "status": "waiting",
-      "assigned_to": "claude",
-      "model": "claude-haiku-3-5-20241022",
-      "prompt": "In ~/Projects/command-center/src/LayoutContext.jsx, fix the resetLayout() function. Currently it calls window.location.reload() which wipes all transient state (modals, unsaved edits, scroll position). Replace it with: clear the 'widgetLayout' and 'hiddenWidgets' keys from localStorage, then reset the local React state (widgets, hiddenWidgets) to default values. Do NOT call location.reload(). The existing defaults are already defined at the top of the component. After changes, run `npm run build` and verify zero errors."
+      "model": "claude-sonnet-4-20250514",
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 3 (Storage Service). Implement it exactly as described. Create src/services/storage.js with the full API (get, set, remove, clear, keys), cc_ prefix, schema versioning with runMigrations(), corrup data handling, and fallback for private browsing mode. Then migrate ALL consumers: LayoutContext.jsx, Kanban.jsx, Todo.jsx, Grocery.jsx, and ThemeContext.jsx. Also call runMigrations() from src/main.jsx before ReactDOM.createRoot. After all changes, run `npm run build` and verify zero errors."
     },
     {
       "id": "polling-fetch-hook",
@@ -22,23 +14,7 @@
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Create a new file ~/Projects/command-center/src/hooks/usePollingFetch.js with a React custom hook that consolidates the fetch + polling pattern repeated across multiple widgets. Create the directory if needed. The hook signature: usePollingFetch(url, interval, options?) where url is a string, interval is ms, and options is an optional object with: { transform: (data) => processed, retry: number (default 2), onError: (err) => void, enabled: boolean (default true), deps: array }. Returns: { data, error, isLoading, isRefreshing, lastUpdated, refetch }. Implementation details: auto-fetch on mount, re-fetch on interval, auto-cleanup on unmount, skip fetch when document.hidden is true, deduplicate in-flight requests (don't start a new fetch if previous is pending), on error keep the previous data value (don't wipe valid data). Then migrate the following files to use this hook: (1) ~/Projects/command-center/src/components/widgets/Weather.jsx - replace its manual useEffect+fetch+setInterval with usePollingFetch at 30s interval. (2) ~/Projects/command-center/src/components/widgets/Monitor.jsx - replace its manual polling with usePollingFetch. (3) ~/Projects/command-center/src/components/widgets/WorkQueue.jsx - replace its 3 separate polling useEffects with usePollingFetch. (4) ~/Projects/command-center/src/components/widgets/GatewayStatus.jsx - replace manual polling with usePollingFetch. Handle loading states consistently across all migrated widgets. After all changes, run `npm run build` and verify zero errors."
-    },
-    {
-      "id": "storage-service",
-      "label": "Create centralized storage service with schema versioning and migrations",
-      "status": "waiting",
-      "assigned_to": "claude",
-      "model": "claude-sonnet-4-20250514",
-      "prompt": "Create ~/Projects/command-center/src/services/storage.js with a centralized localStorage service. Create the directory if needed. Exports: { default as storage } where storage is an object with methods: get(key, defaultValue) - reads prefixed key, JSON.parse with error handling (corrupt data logs warning + returns default), set(key, value) - JSON.stringify + write with cc_ prefix, remove(key) - remove prefixed key, clear() - remove all cc_ prefixed keys. All keys automatically prefixed with 'cc_'. Include schema versioning: read cc_schema_version on init, if version is 0 write version 1, if version doesn't match current write migration functions. Then migrate all localStorage consumers: (1) ~/Projects/command-center/src/LayoutContext.jsx - replace direct localStorage.getItem/setItem with storage service. (2) ~/Projects/command-center/src/components/widgets/Kanban.jsx - replace localStorage access with storage service. (3) ~/Projects/command-center/src/components/widgets/Todo.jsx - replace localStorage with storage service. (4) ~/Projects/command-center/src/components/widgets/Grocery.jsx - replace localStorage with storage service. (5) ~/Projects/command-center/src/ThemeContext.jsx - replace localStorage with storage service. After all changes, run `npm run build` and verify zero errors."
-    },
-    {
-      "id": "error-boundaries",
-      "label": "Add per-widget ErrorBoundary component to prevent full dashboard crashes",
-      "status": "waiting",
-      "assigned_to": "claude",
-      "model": "claude-sonnet-4-20250514",
-      "prompt": "Create ~/Projects/command-center/src/components/ErrorBoundary.jsx - a React class component (error boundaries require class, not function). Props: name (string - widget display name), children. State: { hasError: false, error: null }. Use static getDerivedStateFromError(error) to set hasError=true. In componentDidCatch, log the error to console with the widget name. Render: if error state, show a card with the widget name, the error message, and a 'Retry' button that calls setState({ hasError: false }). If no error, render children normally. Then in ~/Projects/command-center/src/Dashboard.jsx, import ErrorBoundary and wrap each rendered widget component: <ErrorBoundary name={title}><WidgetComponent ... /></ErrorBoundary>. Make sure every widget in the grid render loop gets wrapped. After changes, run `npm run build` and verify zero errors."
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 1 (usePollingFetch Hook). Implement it exactly as described. Create src/hooks/usePollingFetch.js with the full API (url, interval, options with transform/retry/onError/enabled/deps, result with data/error/isLoading/isRefreshing/lastUpdated/refetch). Include: deduplication via AbortController, document.hidden skip, retry with exponential backoff, keep stale data on error, setTimeout-based scheduling (not setInterval), refetch on visibility change, proper cleanup on unmount. Then migrate ALL consumers: Weather.jsx (30s), Monitor.jsx (30s), WorkQueue.jsx (3 polls), and GatewayStatus.jsx. After all changes, run `npm run build` and verify zero errors."
     },
     {
       "id": "widget-registry",
@@ -46,7 +22,15 @@
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Create ~/Projects/command-center/src/registry.js with an extensible widget registry. Export a WIDGETS constant: an array of config objects, each with { id, component, title, defaultPosition, defaultSize }. Import all 14 widget components. Also export getComponents() returning { [id]: component } and getTitles() returning { [id]: title }. Then in ~/Projects/command-center/src/Dashboard.jsx, replace the current hardcoded WIDGET_COMPONENTS and TITLE_MAP imports with imports from '../registry.js'. Replace all references to WIDGET_COMPONENTS[id] and TITLE_MAP[id] with the registry equivalents. The widget rendering logic must remain unchanged - same grid, same drag-and-drop, same layout. Only the source of the component/title map changes. After changes, run `npm run build` and verify zero errors."
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 4 (Widget Registry). Implement it exactly as described. Create src/registry.js with WIDGETS array (all 14 widgets with id, component, title, defaultPosition, defaultSize), getComponents(), getTitles(), and getWidget(). Widget ids must match existing keys in cc_layout localStorage. Then in Dashboard.jsx, replace hardcoded WIDGET_COMPONENTS and TITLE_MAP with getComponents() and getTitles() from the registry. Add a layout-reconciliation pass on mount that drops unknown widget ids and appends missing-but-registered widgets. After changes, run `npm run build` and verify zero errors."
+    },
+    {
+      "id": "error-boundaries",
+      "label": "Add per-widget ErrorBoundary component to prevent full dashboard crashes",
+      "status": "waiting",
+      "assigned_to": "claude",
+      "model": "claude-sonnet-4-20250514",
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 5 (Error Boundaries). Implement it exactly as described. Create src/components/ErrorBoundary.jsx as a class component with name prop, getDerivedStateFromError, componentDidCatch (console.error with widget name), and a Retry button that resets the error state. The fallback UI must have role=alert, display the widget name and error message, and a Retry button. Add .widget-error styles to styles.css under the WIDGETS section. Then in Dashboard.jsx, wrap each rendered widget in <ErrorBoundary name={title}> in the render loop. After changes, run `npm run build` and verify zero errors."
     },
     {
       "id": "kanban-dnd-kit",
@@ -54,23 +38,39 @@
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Refactor ~/Projects/command-center/src/components/widgets/Kanban.jsx to use @dnd-kit/core and @dnd-kit/sortable instead of its current 435-line custom drag system. Already installed: @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities. Keep the existing data structure (cards with id, created, order, column, title, description, tags, due), keep the existing columns config, keep the existing CardEditor modal form, keep the existing localStorage persistence (already migrated to storage service). What to remove: all manual pointer-event code (onPointerDown, onPointerMove, onPointerUp), getDropTarget function, getBoundingClientRect calls, querySelector chains, activeDrag module-level state, custom z-index/transform manipulation, keyboard shortcuts (e, E, Delete, Enter). What to add: Wrap the kanban in DndContext. Each column is a useDroppable. Each card uses useSortable from dnd-kit/sortable. Use DragOverlay for a semi-transparent drag preview. On drag end: detect source and target columns, if same column use arrayMove for reorder, if different columns splice from source + add to target with position tracking. Use PointerSensor with touch support and KeyboardSensor for accessibility. The existing localStorage persistence pattern (loading on mount, saving on change) should remain but use the storage service. After all changes, run `npm run build` and verify zero errors."
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 2 (Kanban Migration to dnd-kit). Implement it exactly as described. Refactor src/components/widgets/Kanban.jsx to use @dnd-kit/core and @dnd-kit/sortable. Already installed. Remove ALL: pointer event handlers, getDropTarget, getBoundingClientRect, querySelector calls, activeDrag state, keyboard shortcuts (e, E, Delete, Enter). Add: DndContext with sensors (PointerSensor with 6px distance, TouchSensor with 180ms delay/8px tolerance, KeyboardSensor with sortableKeyboardCoordinates), collisionDetection=closestCorners, SortableContext per column, useDroppable per column, useSortable per card, DragOverlay with semi-transparent card clone. Implement onDragStart, onDragOver, onDragEnd (same-column arrayMove + cross-column splice), onDragCancel with snapshot revert. Keep existing CardEditor modal, columns config, card shape. Use storage service for persistence. After changes, run `npm run build` and verify zero errors."
+    },
+    {
+      "id": "clock-optimization",
+      "label": "Optimize clock: memoize day/month arrays, split into 60s/1s intervals",
+      "status": "waiting",
+      "assigned_to": "claude",
+      "model": "claude-haiku-3-5-20241022",
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 6.1 (Clock). In src/App.jsx: (1) Move the DAYS and MONTHS arrays to module scope (above the component). (2) Split the timer into two useEffects: one with setInterval at 1000ms for the time display, one with setInterval at 60000ms for the date display. Cleanup both intervals. Keep the existing UI unchanged. After changes, run `npm run build` and verify zero errors."
+    },
+    {
+      "id": "fix-reset-layout",
+      "label": "Fix resetLayout: clear cc_ keys + reset state instead of location.reload()",
+      "status": "waiting",
+      "assigned_to": "claude",
+      "model": "claude-haiku-3-5-20241022",
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 6.2 (resetLayout). In LayoutContext.jsx: replace the current resetLayout() implementation. Instead of calling window.location.reload(), use storage.clear() to wipe all cc_ keys, then reset all React state (layout, activeTab, etc.) to their initial defaults. Do NOT call location.reload(). The dashboard re-renders with default layout because state changed. After changes, run `npm run build` and verify zero errors."
     },
     {
       "id": "css-organization",
-      "label": "Add section comments to styles.css and organize by layout/widgets/theme/responsive",
+      "label": "Add section comments to styles.css organized by theme/layout/widgets/responsive",
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-haiku-3-5-20241022",
-      "prompt": "In ~/Projects/command-center/src/styles.css, add section comments to organize the 1000+ line stylesheet. No structural changes, no selector renaming - just add these comment headers in the appropriate positions: (1) '/* === THEME === */' before the :root and [data-theme] blocks at the top. (2) '/* === LAYOUT === */' before the layout/grid selectors. (3) '/* === WIDGETS === */' before the widget-specific selectors. (4) '/* === RESPONSIVE === */' before the media queries at the bottom. Also move :root CSS variables to the very top if they aren't already. After changes, run `npm run build` and verify zero errors."
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 6.3 (CSS organization). In src/styles.css: add section banners in this order - :ROOT VARIABLES at top, then THEME, LAYOUT, WIDGETS, RESPONSIVE sections. Move :root and [data-theme] blocks to the very top. No rule-level changes - pure reorganization with comments. After changes, run `npm run build` and verify zero errors."
     },
     {
       "id": "light-theme",
-      "label": "Add distinct light theme colors to ThemeContext and styles.css",
+      "label": "Add distinct light theme colors: white bg, dark text, subtle shadows",
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-haiku-3-5-20241022",
-      "prompt": "In ~/Projects/command-center/src/styles.css, add distinct light theme colors. The theme system uses [data-theme] attribute selector. Currently [data-theme='dark'] and [data-theme='midnight'] have defined colors. Add [data-theme='light'] with: black/dark text color (#1a1a2e), white or near-white backgrounds (#ffffff for cards, #f0f2f5 for page bg), subtle box-shadows instead of glow effects, and slightly darker borders for card separation. Keep the existing font sizes and spacing identical. In ~/Projects/command-center/src/ThemeContext.jsx, make sure 'light' is a valid theme option in the toggle cycle (currently might cycle through dark/midnight/dark - add light in the cycle). After changes, run `npm run build` and verify zero errors."
+      "prompt": "Read ~/Projects/command-center/refactor-spec.md section 6.4 (Light theme). In src/styles.css: add [data-theme='light'] block with white bg (page #f7f7f8, cards #ffffff), dark text (#1a1a1f primary, #4a4a52 secondary), subtle borders (#e3e3e8), subtle shadows, and proper accent contrast. Define all theme variables so nothing is left unset. In ThemeContext.jsx: add 'light' to the theme toggle cycle (dark -> midnight -> light -> dark). Persist via storage service. After changes, run `npm run build` and verify zero errors."
     }
   ],
   "last_updated": "2026-06-04T00:00:00-0500"
