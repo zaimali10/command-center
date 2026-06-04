@@ -6,9 +6,10 @@ import { useLayout } from './context/LayoutContext.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Todo from './components/widgets/Todo.jsx';
 import Kanban from './components/widgets/Kanban.jsx';
+import Grocery from './components/widgets/Grocery.jsx';
 
 const TAB_STORAGE_KEY = 'cc.tab.v1';
-const VALID_TABS = ['dashboard', 'todo', 'kanban'];
+const VALID_TABS = ['dashboard', 'todo', 'kanban', 'grocery'];
 
 function loadTab() {
   try {
@@ -107,6 +108,12 @@ function AppInner() {
         >
           Kanban
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'grocery' ? 'active' : ''}`}
+          onClick={() => handleSetTab('grocery')}
+        >
+          Grocery
+        </button>
       </nav>
 
       <div className={`tab-panel ${activeTab === 'dashboard' ? 'active' : ''}`}>
@@ -122,6 +129,13 @@ function AppInner() {
 
       <div id="kanban-tab" className={`tab-panel ${activeTab === 'kanban' ? 'active' : ''}`}>
         <Kanban />
+      </div>
+
+      <div id="grocery-tab" className={`tab-panel ${activeTab === 'grocery' ? 'active' : ''}`}>
+        <div className="card">
+          <h2>Grocery List</h2>
+          <Grocery />
+        </div>
       </div>
     </>
   );
