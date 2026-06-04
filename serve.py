@@ -200,10 +200,12 @@ def _kill_process_on_port(port):
             capture_output=True, text=True, timeout=5
         )
         pids = result.stdout.strip().split('\n')
+        seen = set()
         killed = False
         for pid in pids:
             pid = pid.strip()
-            if pid and pid.isdigit() and int(pid) > 0:
+            if pid and pid.isdigit() and int(pid) > 0 and pid not in seen:
+                seen.add(pid)
                 subprocess.run(["taskkill", "/F", "/PID", pid],
                                capture_output=True, timeout=5)
                 print(f"[Command Center] Killed stale process on port {port} (PID {pid})")
@@ -258,11 +260,14 @@ def start_telemetry():
     if pidfile.exists():
         try:
             old_pid = int(pidfile.read_text().strip())
-            import signal
-            os.kill(old_pid, 0)  # Still alive?
-            print(f"[Command Center] Telemetry daemon already running (PID {old_pid}).")
-            return True
-        except (OSError, ValueError):
+            # Use psutil for cross-platform PID check (os.kill doesn't work on Windows)
+            import psutil
+            if psutil.pid_exists(old_pid):
+                print(f"[Command Center] Telemetry daemon already running (PID {old_pid}).")
+                return True
+            else:
+                pidfile.unlink(missing_ok=True)
+        except (OSError, ValueError, ImportError):
             pidfile.unlink(missing_ok=True)
 
     print("[Command Center] Starting telemetry daemon...")
