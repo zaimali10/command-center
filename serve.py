@@ -21,6 +21,26 @@ PORT = 8080
 HERE = Path(__file__).parent
 
 
+# Extract session token from the Hermes dashboard
+_DASHBOARD_TOKEN = None
+
+def _extract_token():
+    global _DASHBOARD_TOKEN
+    try:
+        req = Request(f"{HERMES_API}/", method="GET")
+        resp = urlopen(req, timeout=5)
+        html = resp.read().decode("utf-8")
+        import re
+        m = re.search(r'__HERMES_SESSION_TOKEN__="([^"]+)"', html)
+        if m:
+            _DASHBOARD_TOKEN = m.group(1)
+            print(f"[Command Center] Session token extracted")
+        else:
+            print("[Command Center] WARNING: Could not extract session token")
+    except Exception as e:
+        print(f"[Command Center] WARNING: Could not fetch token: {e}")
+
+
 class CommandCenterHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(HERE), **kwargs)
@@ -45,7 +65,10 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
 
         try:
             req = Request(target, method="GET")
-            # Forward any auth headers from the request
+            # Inject session token for authenticated endpoints
+            if _DASHBOARD_TOKEN:
+                req.add_header("X-Hermes-Session-Token", _DASHBOARD_TOKEN)
+            # Forward any auth headers from the original request
             auth = self.headers.get("Authorization")
             if auth:
                 req.add_header("Authorization", auth)
@@ -86,9 +109,11 @@ def ensure_dashboard_running():
     """Make sure the Hermes dashboard is up and accessible."""
     try:
         resp = urlopen(f"{HERMES_API}/api/status", timeout=3)
+        _extract_token()
         return True
     except Exception:
         print("[Command Center] Hermes dashboard not running. Starting it...")
+        _kill_process_on_port(9119)
         subprocess.Popen(
             [
                 str(Path(sys.executable).parent / "hermes.exe"),
@@ -97,6 +122,7 @@ def ensure_dashboard_running():
                 "--port", "9119",
                 "--no-open",
                 "--skip-build",
+                "--insecure",
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -108,6 +134,7 @@ def ensure_dashboard_running():
             try:
                 urlopen(f"{HERMES_API}/api/status", timeout=2)
                 print("[Command Center] Hermes dashboard is up.")
+                _extract_token()
                 return True
             except Exception:
                 continue
@@ -115,16 +142,91 @@ def ensure_dashboard_running():
         return False
 
 
+def start_claude_remote_control():
+    """Start Claude remote-control server for phone access."""
+    # Check if already running
+    if _is_claude_rc_running():
+        print("[Command Center] Claude remote-control already running.")
+        return True
+
+    print("[Command Center] Starting Claude remote-control...")
+    try:
+        proc = subprocess.Popen(
+            ["cmd.exe", "/c", "echo y | claude remote-control --name \"Command Center\" --spawn same-dir"],
+            cwd=str(HERE),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        )
+        # Give it a moment to start
+        time.sleep(5)
+        if _is_claude_rc_running():
+            print("[Command Center] Claude remote-control is up.")
+            return True
+        else:
+            print("[Command Center] Claude remote-control may still be starting (PID: %d)" % proc.pid)
+            return True  # Don't block the main server on this
+    except Exception as e:
+        print(f"[Command Center] WARNING: Could not start Claude remote-control: {e}")
+        return False
+
+
+def _is_claude_rc_running():
+    """Check if a claude remote-control server is already running in our project dir."""
+    try:
+        import subprocess
+        result = subprocess.run(
+            ["powershell.exe", "-Command",
+             "Get-WmiObject Win32_Process -Filter \"Name like '%node%'\" | "
+             "Select-Object CommandLine | ConvertTo-Json"],
+            capture_output=True, text=True, timeout=5
+        )
+        output = result.stdout
+        # If any node process has 'remote-control' in its command line, it's running
+        if 'remote-control' in output and f'{HERE}' in output:
+            return True
+        return False
+    except Exception:
+        return False
+
+
+def _kill_process_on_port(port):
+    """Kill any process holding a given TCP port (Windows)."""
+    try:
+        result = subprocess.run(
+            ["powershell.exe", "-Command",
+             f"Get-NetTCPConnection -LocalPort {port} -ErrorAction SilentlyContinue | "
+             f"Select-Object -ExpandProperty OwningProcess -ErrorAction SilentlyContinue"],
+            capture_output=True, text=True, timeout=5
+        )
+        pids = result.stdout.strip().split('\n')
+        for pid in pids:
+            pid = pid.strip()
+            if pid and pid.isdigit():
+                subprocess.run(["taskkill", "/F", "/PID", pid],
+                               capture_output=True, timeout=5)
+                print(f"[Command Center] Killed stale process on port {port} (PID {pid})")
+    except Exception:
+        pass
+
+
 if __name__ == "__main__":
     print(f"🏗️  Command Center Server")
     print(f"   Hermes API:  {HERMES_API}")
 
+    # Kill any stale processes holding our port
+    _kill_process_on_port(PORT)
+
     # Check/start Hermes dashboard
     ensure_dashboard_running()
+
+    # Start Claude remote-control for phone access
+    start_claude_remote_control()
 
     server = HTTPServer(("0.0.0.0", PORT), CommandCenterHandler)
     print(f"\n🌐 Command Center: http://0.0.0.0:{PORT}/")
     print(f"   From iPad:      http://192.168.1.30:{PORT}/")
+    print(f"   Claude RC:   https://claude.ai/code")
     print(f"   (Ctrl+C to stop)\n")
 
     try:
