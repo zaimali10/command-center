@@ -10,7 +10,7 @@ export default function Monitor() {
     function fetchTelemetry() {
       fetch('/data/telemetry.json?' + Date.now())
         .then(r => { if (!r.ok) throw new Error('status ' + r.status); return r.json(); })
-        .then(d => { if (!cancelled) setData(d); setError(null); })
+        .then(d => { if (!cancelled) { setData(d); setError(null); } })
         .catch(e => { if (!cancelled) setError(e.message); });
     }
 

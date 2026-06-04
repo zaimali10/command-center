@@ -92,6 +92,13 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
         serve_dir = str(dist_dir) if dist_dir.is_dir() else str(HERE)
         super().__init__(*args, directory=serve_dir, **kwargs)
 
+    def end_headers(self):
+        # Add CORS headers so ES module scripts with crossorigin attribute work
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+        super().end_headers()
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path

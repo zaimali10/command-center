@@ -28,15 +28,16 @@ export default function Cron() {
   return (
     <table className="widget-table">
       <thead>
-        <tr><td>Job</td><td>State</td><td>Schedule</td><td>Last Run</td></tr>
+        <tr><td>Job</td><td>State</td><td>Schedule</td><td>Last Run</td><td>Status</td></tr>
       </thead>
       <tbody>
         {jobs.map((job, i) => (
           <tr key={job.name || i}>
             <td>{job.name || '—'}</td>
             <td>{job.state || '—'}</td>
-            <td>{job.schedule || '—'}</td>
-            <td>{job.lastRun || '—'}</td>
+            <td>{job.schedule_display || '—'}</td>
+            <td>{job.last_run_at || '—'}</td>
+            <td>{job.last_status || '—'}</td>
           </tr>
         ))}
       </tbody>

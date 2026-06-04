@@ -26,6 +26,7 @@ function AppInner() {
   const [activeTab, setActiveTab] = useState(loadTab);
   const [clock, setClock] = useState('00:00:00');
   const [date, setDate] = useState('');
+  const [gatewayState, setGatewayState] = useState(null);
 
   function handleSetTab(tab) {
     setActiveTab(tab);
@@ -58,6 +59,21 @@ function AppInner() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    async function pollGateway() {
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!cancelled) setGatewayState(json.gateway_state);
+      } catch {}
+    }
+    pollGateway();
+    const interval = setInterval(pollGateway, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
   return (
     <>
       <header>
@@ -66,7 +82,9 @@ function AppInner() {
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <button className="theme-btn" id="reset-layout-btn" onClick={resetLayout}>⟳</button>
           <button className="theme-btn" id="theme-btn" onClick={toggleTheme}>🌓</button>
-          <span className="mode-indicator static">STATIC</span>
+          <span className={`mode-indicator ${gatewayState === 'running' ? 'live' : 'static'}`}>
+            {gatewayState === 'running' ? 'LIVE' : 'STATIC'}
+          </span>
         </div>
       </header>
 

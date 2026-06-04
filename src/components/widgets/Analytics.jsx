@@ -27,17 +27,17 @@ export default function Analytics() {
   let totalIn = 0, totalOut = 0;
   if (Array.isArray(data.daily)) {
     for (const day of data.daily) {
-      totalIn  += day.inputTokens  || 0;
-      totalOut += day.outputTokens || 0;
+      totalIn  += day.input_tokens  || 0;
+      totalOut += day.output_tokens || 0;
     }
   }
-  const totalSessions = data.sessionCount || 0;
+  const totalSessions = data.totals?.total_sessions || 0;
 
   let spark = SPARK_CHARS;
   if (Array.isArray(data.daily) && data.daily.length > 0) {
-    const max = Math.max(...data.daily.map(d => (d.inputTokens || 0) + (d.outputTokens || 0)));
+    const max = Math.max(...data.daily.map(d => (d.input_tokens || 0) + (d.output_tokens || 0)));
     spark = data.daily.map(d => {
-      const total = (d.inputTokens || 0) + (d.outputTokens || 0);
+      const total = (d.input_tokens || 0) + (d.output_tokens || 0);
       if (max === 0) return SPARK_CHARS[0];
       const i = Math.min(Math.ceil((total / max) * 8), 8) - 1;
       return SPARK_CHARS[Math.max(i, 0)];
