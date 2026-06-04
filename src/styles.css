@@ -129,7 +129,6 @@ main#dashboard {
   -webkit-user-select: none;
 }
 .card .empty { color: var(--fg-dim); font-size: 14px; }
-/* .span-2 / .span-full removed in Phase 1 — now using data-span attributes */
 .card.cc-dragging { opacity: 0.3; }
 .cc-ghost {
   position: fixed; pointer-events: none; z-index: 200;
@@ -140,12 +139,6 @@ main#dashboard {
   backdrop-filter: blur(20px) saturate(140%);
   width: 300px;
   transform: rotate(1deg) scale(1.02);
-}
-.cc-drop-indicator {
-  height: 4px; border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-  width: 100%;
 }
 
 /* ── To-Do tab (roomier) ──────────────────────────────────────── */
@@ -165,12 +158,6 @@ footer#widget-quote {
   font-size: 16px;
 }
 
-/* ── Hermes / system rows ─────────────────────────────────────── */
-.hermes-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--fg-dim); }
-.hermes-row span:last-child { color: var(--fg); font-family: var(--font-mono); }
-.hermes-status { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; color: var(--fg); }
-.hermes-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-.hermes-dot.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
 
 /* ── Projects ─────────────────────────────────────────────────── */
 .proj-row { display: flex; gap: 12px; flex-wrap: wrap; }

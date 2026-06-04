@@ -1,0 +1,7 @@
+All clean! Dead code removal complete:
+
+**Summary of changes:**
+- ✓ Deleted `src/lib/api.js` entirely (verified no imports)
+- ✓ In `src/lib/config.js`: Removed weatherLocation, clockTickMs, quoteRotateMs, weatherRefreshMs, livePollMs, hermes object, quotes array, and escapeHtml function. Kept: githubUser, discordChannelUrl, githubRefreshMs, projects
+- ✓ In `src/styles.css`: Removed .hermes-row, .hermes-status, .hermes-dot, .cc-drop-indicator, and the "Phase 1" comment
+- ✓ `npm run build` completed successfully with **zero errors**
