@@ -15,7 +15,7 @@
       "status": "done",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Remove the Weather widget from the Command Center project at ~/Projects/command-center. (1) Delete src/components/widgets/Weather.jsx entirely. (2) In src/components/Dashboard.jsx, remove the line `import Weather from './widgets/Weather.jsx';` and remove the `'widget-weather': Weather,` entry from WIDGET_COMPONENTS, and remove the `'widget-weather': 'Weather \u00b7 Dallas',` entry from TITLE_MAP. (3) In src/styles.css, find and remove the entire CSS section that starts at `/* \u2500\u2500 Weather \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */` (including all rules under it until the next section). (4) After all changes, run `npm run build` from ~/Projects/command-center/ and verify zero errors. Do NOT modify any other files.",
+      "prompt": "Remove the Weather widget from the Command Center project at ~/Projects/command-center. (1) Delete src/components/widgets/Weather.jsx entirely. (2) In src/components/Dashboard.jsx, remove the line `import Weather from './widgets/Weather.jsx';` and remove the `'widget-weather': Weather,` entry from WIDGET_COMPONENTS, and remove the `'widget-weather': 'Weather \\u00b7 Dallas',` entry from TITLE_MAP. (3) In src/styles.css, find and remove the entire CSS section that starts at `/* \\u2500\\u2500 Weather \\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500 */` (including all rules under it until the next section). (4) After all changes, run `npm run build` from ~/Projects/command-center/ and verify zero errors. Do NOT modify any other files.",
       "completed_at": "2026-06-04T14:58:20-0500"
     },
     {
@@ -48,17 +48,18 @@
     {
       "id": "clock-optimization",
       "label": "Extract Clock into own component + memoize arrays",
-      "status": "waiting",
+      "status": "done",
       "assigned_to": "claude",
-      "model": "claude-haiku-3-5-20241022",
-      "prompt": "In ~/Projects/command-center/src/App.jsx: (1) Move the DAYS and MONTHS arrays to module scope (above the component). (2) Extract the clock into its own component (~40 lines) that owns its own setInterval. The parent App should not re-render every second - only the Clock component does. Place the <Clock/> component where the old clock JSX was. (3) Split into two intervals: 1000ms for the time, 60000ms for the date. Cleanup both. After changes, run `npm run build` and verify zero errors."
+      "model": "haiku",
+      "prompt": "In ~/Projects/command-center/src/App.jsx: (1) Move the DAYS and MONTHS arrays to module scope (above the component). (2) Extract the clock into its own component (~40 lines) that owns its own setInterval. The parent App should not re-render every second - only the Clock component does. Place the <Clock/> component where the old clock JSX was. (3) Split into two intervals: 1000ms for the time, 60000ms for the date. Cleanup both. After changes, run `npm run build` and verify zero errors.",
+      "completed_at": "2026-06-04T18:29:51-0500"
     },
     {
       "id": "delete-dead-code",
       "label": "Delete dead api.js, dead CONFIG fields, dead CSS rules",
       "status": "waiting",
       "assigned_to": "claude",
-      "model": "claude-haiku-3-5-20241022",
+      "model": "haiku",
       "prompt": "Clean up dead code across the project: (1) Delete ~/Projects/command-center/src/lib/api.js entirely - it's completely unused (nothing imports it). (2) In ~/Projects/command-center/src/lib/config.js, remove these dead fields: weatherLocation, clockTickMs, quoteRotateMs, weatherRefreshMs, livePollMs, the entire hermes object, the quotes array, and the escapeHtml function. Keep only: githubUser, githubRefreshMs, discordChannelUrl, and projects. (3) In ~/Projects/command-center/src/styles.css, remove these dead rules: .hermes-row, .hermes-status, .hermes-dot, and .cc-drop-indicator. Also remove the comment at line 132 about removed styles. After changes, run `npm run build` and verify zero errors."
     },
     {
@@ -66,8 +67,8 @@
       "label": "Fix CSS comment that references non-existent layout.js",
       "status": "waiting",
       "assigned_to": "claude",
-      "model": "claude-haiku-3-5-20241022",
-      "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
+      "model": "haiku",
+      "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \\u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
     },
     {
       "id": "kanban-queue-board",
@@ -75,8 +76,8 @@
       "status": "waiting",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Complete rewrite of the Kanban board in ~/Projects/command-center/src/components/widgets/Kanban.jsx. The old Kanban with manual card entry is being scrapped entirely. The new Kanban reads from the work queue API (http://localhost:8089/api/queue) and displays the auto-builder's pipeline as a visual board. The Queue API server (queue-api.py on port 8089) is already running and handles GET (list queue) and PATCH /api/queue/<id> (update item status).\n\nRequirements:\n\n1. COLUMNS (map queue status to board columns):\n   - 'waiting' \u2192 'To Do'\n   - 'in_progress' \u2192 'Working'\n   - 'done' \u2192 'Completed'\n   - 'failed', 'paused' \u2192 'Blocked'\n\n2. DATA SOURCE: Fetch from http://localhost:8089/api/queue on mount and every 15s. Use usePollingFetch from src/hooks/usePollingFetch.js with a 15s poll interval and no retry. Display each item's label as the card title.\n\n3. CARDS: Each card displays:\n   - Queue item 'label' as the card title (not 'id')\n   - Model badge (e.g. 'claude-sonnet-4-20250514' shown as a small colored tag)\n   - No title/description/tags/due fields from the old Kanban\n\n4. DRAG AND DROP (USE @dnd-kit/core and @dnd-kit/sortable):\n   - Import DndContext, DragOverlay, useDroppable, useSortable, closestCorners\n   - PointerSensor with 6px activation distance, TouchSensor with 250ms/8px\n   - Each column is a Droppable with a SortableContext\n   - Each card is Sortable\n   - DragOverlay shows a semi-transparent card clone while dragging\n   - On drag end: send PATCH to http://localhost:8089/api/queue/<id> with body {'status': new_status}\n   - New status mapping: 'To Do'\u2192'waiting', 'Working'\u2192'in_progress', 'Completed'\u2192'done', 'Blocked'\u2192'paused'\n   - Handle PATCH errors gracefully (show brief toast/console.warn, don't crash)\n\n5. REMOVE:\n   - No CardEditor modal (no add button, no edit form, no title/description/tags/due inputs)\n   - No module-level drag state (activeDrag, getDropTarget, startDragFromCard, moveDrag, endDragCleanup)\n   - No pointer event handlers on cards\n   - No keyboard shortcuts (e/Delete/Enter for card manipulation)\n   - No localStorage storage (kanban_cards) - data comes from API\n   - No due date / tags / description rendering on cards\n\n6. STYLING: Keep the existing Kanban CSS classes (.kb-board, .kb-col, .kb-col-head, .kb-col-body, .kb-card, .kb-count, .kb-empty). Add a small colored badge on each card showing the model name. Cards should look clean - just title text + model badge. Remove any old CSS for card description, tags, due dates, and the CardEditor modal from styles.css.\n\n7. After all changes, run `npm run build` and verify zero errors."
+      "prompt": "Complete rewrite of the Kanban board in ~/Projects/command-center/src/components/widgets/Kanban.jsx. The old Kanban with manual card entry is being scrapped entirely. The new Kanban reads from the work queue API (http://localhost:8089/api/queue) and displays the auto-builder's pipeline as a visual board. The Queue API server (queue-api.py on port 8089) is already running and handles GET (list queue) and PATCH /api/queue/<id> (update item status).\n\nRequirements:\n\n1. COLUMNS (map queue status to board columns):\n   - 'waiting' \u2192 'To Do'\n   - 'in_progress' \u2192 'Working'\n   - 'done' \u2192 'Completed'\n   - 'failed', 'paused' \u2192 'Blocked'\n\n2. DATA SOURCE: Fetch from http://localhost:8089/api/queue on mount and every 15s. Use usePollingFetch from src/hooks/usePollingFetch.js with a 15s poll interval and no retry. Display each item's label as the card title.\n\n3. CARDS: Each card displays:\n   - Queue item 'label' as the card title (not 'id')\n   - Model badge (e.g. 'claude-sonnet-4-20250514' shown as a small colored tag)\n   - No title/description/tags/due fields from the old Kanban\n\n4. DRAG AND DROP (USE @dnd-kit/core and @dnd-kit/sortable):\n   - Import DndContext, DragOverlay, useDroppable, useSortable, closestCorners\n   - PointerSensor with 6px activation distance, TouchSensor with 250ms/8px\n   - Each column is a Droppable with a SortableContext\n   - Each card is Sortable\n   - DragOverlay shows a semi-transparent card clone while dragging\n   - On drag end: send PATCH to http://localhost:8089/api/queue/<id> with body {'status': new_status}\n   - New status mapping: 'To Do'\u2192'waiting', 'Working'\u2192'in_progress', 'Completed'\u2192'done', 'Blocked'\u2192'paused'\n   - Handle PATCH errors gracefully (show brief toast/console.warn, don't crash)\n\n5. REMOVE:\n   - No CardEditor modal (no add button, no edit form, no title/description/tags/due inputs)\n   - No module-level drag state (activeDrag, getDropTarget, startDragFromIndex)\n   - Remove any existing Kanban CSS related to the old card editor form\n\n6. LAYOUT: The board should fit within the widget container. Cards should be compact (no excess padding). Use CSS flexbox/grid within the widget. No external styling library."
     }
   ],
-  "last_updated": "2026-06-04T16:29:03-0500"
+  "last_updated": "2026-06-04T18:29:51-0500"
 }

@@ -12,6 +12,10 @@ import WorkQueue from './components/widgets/WorkQueue.jsx';
 const TAB_STORAGE_KEY = 'cc.tab.v1';
 const VALID_TABS = ['dashboard', 'todo', 'kanban', 'workqueue', 'grocery'];
 
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+
 function loadTab() {
   try {
     const stored = localStorage.getItem(TAB_STORAGE_KEY);
@@ -22,32 +26,11 @@ function loadTab() {
   return 'dashboard';
 }
 
-function AppInner() {
-  const { toggleTheme } = useTheme();
-  const { resetLayout } = useLayout();
-  const [activeTab, setActiveTab] = useState(loadTab);
+function Clock() {
   const [clock, setClock] = useState('00:00:00');
   const [date, setDate] = useState('');
-  const [gatewayState, setGatewayState] = useState(null);
-
-  function handleSetTab(tab) {
-    setActiveTab(tab);
-    localStorage.setItem(TAB_STORAGE_KEY, tab);
-  }
 
   useEffect(() => {
-    const formatDate = () => {
-      const now = new Date();
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                     'July', 'August', 'September', 'October', 'November', 'December'];
-      const dayName = days[now.getDay()];
-      const monthName = months[now.getMonth()];
-      const dayNum = now.getDate();
-      return `${dayName}, ${monthName} ${dayNum}`;
-    };
-    setDate(formatDate());
-
     const updateClock = () => {
       const now = new Date();
       let hours = now.getHours();
@@ -61,6 +44,41 @@ function AppInner() {
     const interval = setInterval(updateClock, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const formatDate = () => {
+      const now = new Date();
+      const dayName = DAYS[now.getDay()];
+      const monthName = MONTHS[now.getMonth()];
+      const dayNum = now.getDate();
+      return `${dayName}, ${monthName} ${dayNum}`;
+    };
+
+    setDate(formatDate());
+    const interval = setInterval(() => {
+      setDate(formatDate());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <>
+      <div id="clock">{clock}</div>
+      <div id="date">{date}</div>
+    </>
+  );
+}
+
+function AppInner() {
+  const { toggleTheme } = useTheme();
+  const { resetLayout } = useLayout();
+  const [activeTab, setActiveTab] = useState(loadTab);
+  const [gatewayState, setGatewayState] = useState(null);
+
+  function handleSetTab(tab) {
+    setActiveTab(tab);
+    localStorage.setItem(TAB_STORAGE_KEY, tab);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -80,8 +98,7 @@ function AppInner() {
   return (
     <>
       <header>
-        <div id="clock">{clock}</div>
-        <div id="date">{date}</div>
+        <Clock />
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <button className="theme-btn" id="reset-layout-btn" onClick={resetLayout}>⟳</button>
           <button className="theme-btn" id="theme-btn" onClick={toggleTheme}>🌓</button>
