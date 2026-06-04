@@ -39,26 +39,11 @@
     {
       "id": "migrate-dashboard-registry-plus-error-boundary",
       "label": "Migrate Dashboard to registry + add ErrorBoundary",
-      "status": "waiting",
+      "status": "done",
       "assigned_to": "claude",
       "model": "claude-sonnet-4-20250514",
-      "prompt": "Two changes in ~/Projects/command-center/src/components/Dashboard.jsx: (1) Replace hardcoded WIDGET_COMPONENTS and TITLE_MAP with getComponents() and getTitles() from src/registry.js. Remove the old constants. (2) Create ~/Projects/command-center/src/components/ErrorBoundary.jsx as a class component. Props: name, children. State: hasError/error. Use getDerivedStateFromError and componentDidCatch (console.error with name). Fallback shows widget name, error message, and Retry button. Wrap each rendered widget in Dashboard.jsx in <ErrorBoundary name={title}>. Add .widget-error styles (red accent border) in styles.css under the WIDGETS section. After changes, run `npm run build` and verify zero errors."
-    },
-    {
-      "id": "kanban-dnd-kit-layer",
-      "label": "Add dnd-kit drag-and-drop layer to Kanban",
-      "status": "waiting",
-      "assigned_to": "claude",
-      "model": "claude-sonnet-4-20250514",
-      "prompt": "Refactor ~/Projects/command-center/src/components/widgets/Kanban.jsx to use @dnd-kit/core and @dnd-kit/sortable. Already installed. Read the spec at ~/Projects/command-center/refactor-spec.md section 2. Keep CardEditor, columns config, card shape. Add DndContext with sensors (PointerSensor 6px, TouchSensor 180ms/8px, KeyboardSensor with sortableKeyboardCoordinates), collisionDetection=closestCorners. Each column = useDroppable + SortableContext. Each card = useSortable. Add DragOverlay. Implement onDragStart/onDragOver/onDragEnd/onDragCancel. Do NOT remove old pointer-event code yet. After changes, run `npm run build` and verify zero errors."
-    },
-    {
-      "id": "kanban-cleanup",
-      "label": "Remove old Kanban drag code, finalize persistence, build",
-      "status": "waiting",
-      "assigned_to": "claude",
-      "model": "claude-sonnet-4-20250514",
-      "prompt": "In ~/Projects/command-center/src/components/widgets/Kanban.jsx: Remove ALL old manual drag code - the `let activeDrag = null` module-level variable, pointer event handlers, getDropTarget function, getBoundingClientRect calls, querySelector chains, keyboard shortcuts (e, E, Delete, Enter), z-index/transform manipulation, and classList-based highlight manipulation. Switch persistence to storage service (storage.get('kanban_cards', []) and storage.set). After changes, run `npm run build` and verify zero errors."
+      "prompt": "Two changes in ~/Projects/command-center/src/components/Dashboard.jsx: (1) Replace hardcoded WIDGET_COMPONENTS and TITLE_MAP with getComponents() and getTitles() from src/registry.js. Remove the old constants. (2) Create ~/Projects/command-center/src/components/ErrorBoundary.jsx as a class component. Props: name, children. State: hasError/error. Use getDerivedStateFromError and componentDidCatch (console.error with name). Fallback shows widget name, error message, and Retry button. Wrap each rendered widget in Dashboard.jsx in <ErrorBoundary name={title}>. Add .widget-error styles (red accent border) in styles.css under the WIDGETS section. After changes, run `npm run build` and verify zero errors.",
+      "completed_at": "2026-06-04T16:29:03-0500"
     },
     {
       "id": "clock-optimization",
@@ -83,7 +68,15 @@
       "assigned_to": "claude",
       "model": "claude-haiku-3-5-20241022",
       "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
+    },
+    {
+      "id": "kanban-queue-board",
+      "label": "Replace Kanban with auto-populated Queue Board (single source of truth)",
+      "status": "waiting",
+      "assigned_to": "claude",
+      "model": "claude-sonnet-4-20250514",
+      "prompt": "Complete rewrite of the Kanban board in ~/Projects/command-center/src/components/widgets/Kanban.jsx. The old Kanban with manual card entry is being scrapped entirely. The new Kanban reads from the work queue API (http://localhost:8089/api/queue) and displays the auto-builder's pipeline as a visual board. The Queue API server (queue-api.py on port 8089) is already running and handles GET (list queue) and PATCH /api/queue/<id> (update item status).\n\nRequirements:\n\n1. COLUMNS (map queue status to board columns):\n   - 'waiting' \u2192 'To Do'\n   - 'in_progress' \u2192 'Working'\n   - 'done' \u2192 'Completed'\n   - 'failed', 'paused' \u2192 'Blocked'\n\n2. DATA SOURCE: Fetch from http://localhost:8089/api/queue on mount and every 15s. Use usePollingFetch from src/hooks/usePollingFetch.js with a 15s poll interval and no retry. Display each item's label as the card title.\n\n3. CARDS: Each card displays:\n   - Queue item 'label' as the card title (not 'id')\n   - Model badge (e.g. 'claude-sonnet-4-20250514' shown as a small colored tag)\n   - No title/description/tags/due fields from the old Kanban\n\n4. DRAG AND DROP (USE @dnd-kit/core and @dnd-kit/sortable):\n   - Import DndContext, DragOverlay, useDroppable, useSortable, closestCorners\n   - PointerSensor with 6px activation distance, TouchSensor with 250ms/8px\n   - Each column is a Droppable with a SortableContext\n   - Each card is Sortable\n   - DragOverlay shows a semi-transparent card clone while dragging\n   - On drag end: send PATCH to http://localhost:8089/api/queue/<id> with body {'status': new_status}\n   - New status mapping: 'To Do'\u2192'waiting', 'Working'\u2192'in_progress', 'Completed'\u2192'done', 'Blocked'\u2192'paused'\n   - Handle PATCH errors gracefully (show brief toast/console.warn, don't crash)\n\n5. REMOVE:\n   - No CardEditor modal (no add button, no edit form, no title/description/tags/due inputs)\n   - No module-level drag state (activeDrag, getDropTarget, startDragFromCard, moveDrag, endDragCleanup)\n   - No pointer event handlers on cards\n   - No keyboard shortcuts (e/Delete/Enter for card manipulation)\n   - No localStorage storage (kanban_cards) - data comes from API\n   - No due date / tags / description rendering on cards\n\n6. STYLING: Keep the existing Kanban CSS classes (.kb-board, .kb-col, .kb-col-head, .kb-col-body, .kb-card, .kb-count, .kb-empty). Add a small colored badge on each card showing the model name. Cards should look clean - just title text + model badge. Remove any old CSS for card description, tags, due dates, and the CardEditor modal from styles.css.\n\n7. After all changes, run `npm run build` and verify zero errors."
     }
   ],
-  "last_updated": "2026-06-04T15:58:47-0500"
+  "last_updated": "2026-06-04T16:29:03-0500"
 }

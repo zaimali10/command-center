@@ -103,6 +103,24 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
 
+        # Serve the work queue data for the Kanban board
+        if path == "/api/queue":
+            queue_path = HERE / "data" / "work-queue.json"
+            if queue_path.exists():
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                with open(queue_path, "rb") as f:
+                    self.wfile.write(f.read())
+                return
+            self.send_response(404)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "work-queue.json not found"}).encode())
+            return
+
         # Proxy API calls to Hermes dashboard
         if path.startswith("/api/") or path == "/health":
             self.proxy_to_hermes(path, parsed.query)
@@ -164,8 +182,80 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, PATCH, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+        self.end_headers()
+
+    def do_PATCH(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+
+        # PATCH /api/queue/<id> — update a queue item's status
+        if path.startswith("/api/queue/"):
+            item_id = path[len("/api/queue/"):]
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length == 0:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "No request body"}).encode())
+                return
+
+            body = json.loads(self.rfile.read(content_length))
+            new_status = body.get("status")
+            valid_statuses = {"waiting", "in_progress", "done", "failed", "paused"}
+            if new_status not in valid_statuses:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": f"Invalid status: {new_status}. Must be one of {valid_statuses}"}).encode())
+                return
+
+            queue_path = HERE / "data" / "work-queue.json"
+            if not queue_path.exists():
+                self.send_response(404)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "work-queue.json not found"}).encode())
+                return
+
+            with open(queue_path, "r") as f:
+                queue_data = json.load(f)
+
+            updated = False
+            for item in queue_data.get("queue", []):
+                if item["id"] == item_id:
+                    item["status"] = new_status
+                    if new_status == "done":
+                        item["completed_at"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+                    item.pop("last_error", None)
+                    updated = True
+                    break
+
+            if not updated:
+                self.send_response(404)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": f"Item '{item_id}' not found"}).encode())
+                return
+
+            queue_data["last_updated"] = time.strftime("%Y-%m-%dT%H:%M:%S%z")
+            with open(queue_path, "w") as f:
+                json.dump(queue_data, f, indent=2)
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({"ok": True, "id": item_id, "status": new_status}).encode())
+            return
+
+        self.send_response(405)
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
 
     def log_message(self, format, *args):
