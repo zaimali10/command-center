@@ -1,0 +1,3 @@
+Perfect. I can see the project uses a modern dark theme with glassmorphic styling, React with polling hooks, and CSS custom properties. Now let me ask some clarifying questions about the new Kanban design.
+
+**First question:** What status values can queue items have? For example, is it something like `queued` → `running` → `done`, or different values? I need to understand what statuses will become your board columns.

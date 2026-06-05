@@ -1,6 +1,6 @@
 {
-  "task_id": "fix-layout-comment",
-  "pid": 16804,
-  "started_at": "2026-06-04T19:03:09-0500",
-  "prompt_file": "C:\\Users\\Zaim-Work\\Projects\\command-center\\data\\prompt_fix-layout-comment.txt"
+  "task_id": "kanban-queue-board",
+  "pid": 8188,
+  "started_at": "2026-06-04T19:10:05-0500",
+  "prompt_file": "C:\\Users\\Zaim-Work\\Projects\\command-center\\data\\prompt_kanban-queue-board.txt"
 }
