@@ -1,0 +1,42 @@
+CRITICAL INSTRUCTION: You MUST implement these changes. Do NOT ask questions. Do NOT ask for clarification. Just write the code.
+
+Completely rewrite ~/Projects/command-center/src/components/widgets/Kanban.jsx. The old Kanban with manual card entry, localStorage, and pointer-based drag is being scrapped entirely. Replace it with a queue board that reads from the queue API.
+
+IMPORTANT: This is NOT optional. You must write the actual code changes. Do not summarize what you would do. Do not ask for confirmation. Write the file.
+
+## Requirements
+
+1. COLUMNS (map queue status to board columns):
+   - 'waiting' → 'To Do'
+   - 'in_progress' → 'Working'
+   - 'done' → 'Completed'
+   - 'failed', 'paused' → 'Blocked'
+
+2. DATA SOURCE: Fetch from http://localhost:8089/api/queue on mount and every 15s. Use usePollingFetch from src/hooks/usePollingFetch.js with a 15s poll interval and no retry. Display each item's label as the card title. Show ALL items in the queue including done, failed, paused.
+
+3. CARDS: Each card displays the item 'label' as the card title. Show a model badge (e.g. 'claude-sonnet-4-20250514' as a small colored tag). Show the status as a dot indicator. Show completed_at timestamp for done/failed items.
+
+4. DRAG AND DROP (USE @dnd-kit/core and @dnd-kit/sortable):
+   - Import DndContext, DragOverlay, useDroppable, useSortable, closestCorners
+   - PointerSensor with 6px activation distance, TouchSensor with 250ms/8px
+   - Each column is a Droppable with a SortableContext
+   - Each card is Sortable
+   - DragOverlay shows a semi-transparent card clone while dragging
+   - On drag end: send PATCH to http://localhost:8089/api/queue/<id> with body {"status": new_status}
+   - New status mapping: 'To Do'→'waiting', 'Working'→'in_progress', 'Completed'→'done', 'Blocked'→'paused'
+   - Handle PATCH errors gracefully (console.warn, don't crash)
+
+5. REMOVE all traces of the old Kanban:
+   - No CardEditor modal
+   - No add button
+   - No title/description/tags/due inputs
+   - No localStorage kanban_cards
+   - No storage.get/set imports
+   - No pointer-based drag (old getDropTarget, startDragFromCard, moveDrag, endDragCleanup)
+   - No module-level drag state
+   - No COLUMNS constant with backlog/in-progress/done
+
+6. STYLING: The board should fit within the widget container use existing kanban CSS classes. Cards should be compact.
+
+## VERIFICATION
+After writing the new Kanban.jsx, run `npm run build` from ~/Projects/command-center/ and verify zero errors. If there are build errors, fix them and rebuild.
