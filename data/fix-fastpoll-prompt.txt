@@ -1,0 +1,44 @@
+In ~/AppData/Local/hermes/scripts/auto-builder.py, fix the tick-entry path in Case B so that when the code falls through from a completed task, it does NOT start a new worker directly — instead it schedules a fast poll and exits. The one-shot tick that reaps a completed worker should not also try to launch the next worker, because the child process gets killed when the tick exits.
+
+The issue: After a worker is completed in the same tick (lines 437-446), the code falls through to Case B (line 505+) which calls start_worker() to launch the next task. But start_worker uses CREATE_NO_WINDOW, not DETACHED_PROCESS/CREATE_BREAKAWAY_FROM_JOB. So when the tick exits (return 0 at line 554), the new worker child gets killed. The next 15-minute recurring tick then finds no worker running and no in_progress item, so nothing happens.
+
+## Fix
+
+### Change 1: Case B — only start a worker if no worker was running
+
+At the top of Case B (around line 505-506), add a gate: if a worker was already processed in this tick (i.e., a worker existed and was reaped), DON'T start a new worker. Instead, schedule a fast poll and return.
+
+Change lines 505-507 from:
+```python
+    # ─── Case B: No worker running — pick next task ─────────────
+    pending = [item for item in q.get('queue', [])
+               if item.get('status') == 'waiting' and item.get('assigned_to') == 'claude']
+```
+
+To:
+```python
+    # ─── Case B: No worker running — pick next task ─────────────
+    # If we just reaped a worker in this tick, don't try to start the
+    # next one now — the child process would be killed when the tick
+    # exits (start_worker doesn't detach from the job object).
+    # Schedule a fast poll instead and let the next tick handle it.
+    if worker:
+        pending_after = [item for item in q.get('queue', [])
+                         if item.get('status') == 'waiting' and item.get('assigned_to') == 'claude']
+        if pending_after:
+            log(f'Worker reaped — scheduling fast poll for next task instead of launching now')
+            schedule_fast_poll(FAST_POLL_GRACE_MIN)
+        return 0
+
+    pending = [item for item in q.get('queue', [])
+               if item.get('status') == 'waiting' and item.get('assigned_to') == 'claude']
+```
+
+This means: if this tick entered the worker-processing branch (any of them — reap, still-running, or crash), and there are more pending items, schedule a 30-second poll and exit. The NEXT tick will start the worker cleanly.
+
+### Change 2: Remove the redundant schedule_fast_poll call on the success path
+
+The `schedule_fast_poll(FAST_POLL_GRACE_MIN)` at line 446 (inside the success block) is now handled by the gate in Case B. But keeping it doesn't hurt — it creates a 30-second poll, and the gate at Case B also tries to create one (which overwrites with the same interval). No harm either way. But for cleanliness, we could keep it or remove it. Recommend keeping it as a defensive measure — if someone later removes the gate, the fast poll still fires.
+
+## Verify
+Run: python -c "import ast; ast.parse(open(r'C:/Users/Zaim-Work/AppData/Local/hermes/scripts/auto-builder.py').read()); print('SYNTAX OK')"

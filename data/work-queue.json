@@ -66,10 +66,11 @@
     {
       "id": "fix-layout-comment",
       "label": "Fix CSS comment that references non-existent layout.js",
-      "status": "waiting",
+      "status": "done",
       "assigned_to": "claude",
       "model": "haiku",
-      "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \\u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors."
+      "prompt": "In ~/Projects/command-center/src/styles.css, find the comment that says '/* Grid column count is now handled by JS (--cols) \\u2014 see layout.js */' and replace it with '/* Grid column count via --cols (default 3, set by JS at runtime) */'. There is no layout.js file. After changes, run `npm run build` and verify zero errors.",
+      "completed_at": "2026-06-04T19:04:13-0500"
     },
     {
       "id": "kanban-queue-board",
@@ -80,5 +81,5 @@
       "prompt": "Complete rewrite of the Kanban board in ~/Projects/command-center/src/components/widgets/Kanban.jsx. The old Kanban with manual card entry is being scrapped entirely. The new Kanban reads from the work queue API (http://localhost:8089/api/queue) and displays the auto-builder's pipeline as a visual board. The Queue API server (queue-api.py on port 8089) is already running and handles GET (list queue) and PATCH /api/queue/<id> (update item status).\n\nRequirements:\n\n1. COLUMNS (map queue status to board columns):\n   - 'waiting' \u2192 'To Do'\n   - 'in_progress' \u2192 'Working'\n   - 'done' \u2192 'Completed'\n   - 'failed', 'paused' \u2192 'Blocked'\n\n2. DATA SOURCE: Fetch from http://localhost:8089/api/queue on mount and every 15s. Use usePollingFetch from src/hooks/usePollingFetch.js with a 15s poll interval and no retry. Display each item's label as the card title.\n\n3. CARDS: Each card displays:\n   - Queue item 'label' as the card title (not 'id')\n   - Model badge (e.g. 'claude-sonnet-4-20250514' shown as a small colored tag)\n   - No title/description/tags/due fields from the old Kanban\n\n4. DRAG AND DROP (USE @dnd-kit/core and @dnd-kit/sortable):\n   - Import DndContext, DragOverlay, useDroppable, useSortable, closestCorners\n   - PointerSensor with 6px activation distance, TouchSensor with 250ms/8px\n   - Each column is a Droppable with a SortableContext\n   - Each card is Sortable\n   - DragOverlay shows a semi-transparent card clone while dragging\n   - On drag end: send PATCH to http://localhost:8089/api/queue/<id> with body {'status': new_status}\n   - New status mapping: 'To Do'\u2192'waiting', 'Working'\u2192'in_progress', 'Completed'\u2192'done', 'Blocked'\u2192'paused'\n   - Handle PATCH errors gracefully (show brief toast/console.warn, don't crash)\n\n5. REMOVE:\n   - No CardEditor modal (no add button, no edit form, no title/description/tags/due inputs)\n   - No module-level drag state (activeDrag, getDropTarget, startDragFromIndex)\n   - Remove any existing Kanban CSS related to the old card editor form\n\n6. LAYOUT: The board should fit within the widget container. Cards should be compact (no excess padding). Use CSS flexbox/grid within the widget. No external styling library."
     }
   ],
-  "last_updated": "2026-06-04T18:47:04-0500"
+  "last_updated": "2026-06-04T19:04:13-0500"
 }

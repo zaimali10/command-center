@@ -752,7 +752,7 @@ html[data-theme="midnight"] body {
 }
 
 /* ── Responsive ───────────────────────────────────────────────── */
-/* Grid column count is now handled by JS (--cols) — see layout.js */
+/* Grid column count via --cols (default 3, set by JS at runtime) */
 @media (max-width: 700px) {
   /* main#dashboard grid is now handled by --cols from layout.js */
   header { flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px; }
